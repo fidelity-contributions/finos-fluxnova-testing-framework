@@ -1,0 +1,5 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.finos.fluxnova.bpm.test.spring.platform.ProcessEngineCoverageConfiguration
+
+org.springframework.test.context.TestExecutionListener=\
+  org.finos.fluxnova.bpm.test.spring.platform.ProcessEngineCoverageTestExecutionListener

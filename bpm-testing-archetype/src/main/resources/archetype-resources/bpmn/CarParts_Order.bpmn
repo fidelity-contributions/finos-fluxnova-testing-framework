@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" id="Definitions_0n9dcd9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0">
+  <bpmn:process id="CarPartsOrderProcessKey" name="CarPartsOrder" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_11ud344</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1yxsixk" sourceRef="GoToPartSearch" targetRef="Activity_1sosy45" />
+    <bpmn:serviceTask id="Lookup_Car_Make_Model" name="Lookup Car Make/Model (Http Connector)">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="header">
+              <camunda:map>
+                <camunda:entry key="Acccept">application/json</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="method">GET</camunda:inputParameter>
+            <camunda:inputParameter name="url">http://localhost:8080/car-registration/${carRegistration}</camunda:inputParameter>
+            <camunda:outputParameter name="carLookupStatusCode">${statusCode}</camunda:outputParameter>
+            <camunda:outputParameter name="carMakeModel">${response}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0e7c7co</bpmn:incoming>
+      <bpmn:outgoing>Flow_0f22wta</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0e7c7co" sourceRef="Activity_05tg1gr" targetRef="Lookup_Car_Make_Model" />
+    <bpmn:exclusiveGateway id="Gateway_0k56o7c" default="Flow_02l3isc">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0f22wta</bpmn:incoming>
+      <bpmn:outgoing>Flow_02l3isc</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1la201r</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0f22wta" sourceRef="Lookup_Car_Make_Model" targetRef="Gateway_0k56o7c" />
+    <bpmn:sequenceFlow id="Flow_02l3isc" sourceRef="Gateway_0k56o7c" targetRef="Activity_1s12wj6" />
+    <bpmn:sequenceFlow id="Flow_1la201r" sourceRef="Gateway_0k56o7c" targetRef="Activity_1cp3w2e">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isVintage == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:scriptTask id="Activity_1cp3w2e" name="Vintage Car" scriptFormat="groovy" camunda:resource="bpmn/scripts/car-lookup.groovy">
+      <bpmn:incoming>Flow_1la201r</bpmn:incoming>
+      <bpmn:outgoing>Flow_0v262as</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_1s12wj6" name="Regular Car" scriptFormat="groovy" camunda:resource="bpmn/scripts/car-lookup.groovy">
+      <bpmn:incoming>Flow_02l3isc</bpmn:incoming>
+      <bpmn:outgoing>Flow_18fzzym</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_18fzzym" sourceRef="Activity_1s12wj6" targetRef="Activity_0r5uy0n" />
+    <bpmn:sequenceFlow id="Flow_0v262as" sourceRef="Activity_1cp3w2e" targetRef="Activity_17jpph3" />
+    <bpmn:sequenceFlow id="Flow_11ud344" sourceRef="StartEvent_1" targetRef="GoToPartSearch" />
+    <bpmn:scriptTask id="GoToPartSearch" name="Go To Part Search" scriptFormat="groovy">
+      <bpmn:incoming>Flow_11ud344</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yxsixk</bpmn:outgoing>
+      <bpmn:script>def partsSearchUrl = "https://carparts.com";
+def isVintage = false;
+def carAge = execution.getVariable("carAge");
+
+if (carAge &gt; 30) {
+    isVintage = true;
+    partsSearchUrl = "https://vintagecarparts.com";
+}
+
+execution.setVariable("searchUrl", partsSearchUrl);
+execution.setVariable("isVintage", isVintage);
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Activity_05tg1gr" name="Capture Car Registration" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.CarPartsDelegate">
+      <bpmn:incoming>Flow_0iegivu</bpmn:incoming>
+      <bpmn:outgoing>Flow_0e7c7co</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="Activity_1kfqh89" triggeredByEvent="true">
+      <bpmn:scriptTask id="ExceptionHandling" name="ExceptionHandling" scriptFormat="groovy">
+        <bpmn:incoming>Flow_1y7cyjq</bpmn:incoming>
+        <bpmn:outgoing>Flow_04drzxx</bpmn:outgoing>
+        <bpmn:script>execution.setVariable("result", "fail");
+</bpmn:script>
+      </bpmn:scriptTask>
+      <bpmn:endEvent id="Event_1tgkh65" name="ErrorEnd">
+        <bpmn:extensionElements />
+        <bpmn:incoming>Flow_04drzxx</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_1y7cyjq" sourceRef="ErrorStart" targetRef="ExceptionHandling" />
+      <bpmn:sequenceFlow id="Flow_04drzxx" sourceRef="ExceptionHandling" targetRef="Event_1tgkh65" />
+      <bpmn:startEvent id="ErrorStart" name="ErrorStart">
+        <bpmn:outgoing>Flow_1y7cyjq</bpmn:outgoing>
+        <bpmn:errorEventDefinition id="ErrorEventDefinition_01thbgy" />
+      </bpmn:startEvent>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="Vintage_PartOrder_End" name="Vintage_PartOrder_End">
+      <bpmn:incoming>Flow_1rl1uqo</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1rl1uqo" sourceRef="Activity_17jpph3" targetRef="Vintage_PartOrder_End" />
+    <bpmn:endEvent id="Regular_PartOrder_End" name="Regular_PartOrder_End">
+      <bpmn:incoming>Flow_13il8vy</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13il8vy" sourceRef="Activity_0r5uy0n" targetRef="Regular_PartOrder_End" />
+    <bpmn:userTask id="Activity_1sosy45" name="Input Car Registration">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="carRegistration">261D1234</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1yxsixk</bpmn:incoming>
+      <bpmn:outgoing>Flow_0iegivu</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0iegivu" sourceRef="Activity_1sosy45" targetRef="Activity_05tg1gr" />
+    <bpmn:callActivity id="Activity_0r5uy0n" name="Order Regular Part" calledElement="OrderRegularPartProcess">
+      <bpmn:incoming>Flow_18fzzym</bpmn:incoming>
+      <bpmn:outgoing>Flow_13il8vy</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="Activity_17jpph3" name="Order Vintage Part" calledElement="OrderVintagePartProcess">
+      <bpmn:incoming>Flow_0v262as</bpmn:incoming>
+      <bpmn:outgoing>Flow_1rl1uqo</bpmn:outgoing>
+    </bpmn:callActivity>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="CarPartsOrderProcessKey">
+      <bpmndi:BPMNShape id="Activity_10yajr5_di" bpmnElement="Lookup_Car_Make_Model">
+        <dc:Bounds x="720" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0k56o7c_di" bpmnElement="Gateway_0k56o7c" isMarkerVisible="true">
+        <dc:Bounds x="875" y="95" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1vkqzuf_di" bpmnElement="Activity_1cp3w2e">
+        <dc:Bounds x="980" y="190" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0j9lmvu_di" bpmnElement="Activity_1s12wj6">
+        <dc:Bounds x="980" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0bkr7xm_di" bpmnElement="Activity_05tg1gr">
+        <dc:Bounds x="570" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0fu8vdt_di" bpmnElement="Vintage_PartOrder_End">
+        <dc:Bounds x="1302" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1281" y="265" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ic7z5r_di" bpmnElement="Regular_PartOrder_End">
+        <dc:Bounds x="1302" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1281" y="145" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1etof2w_di" bpmnElement="GoToPartSearch">
+        <dc:Bounds x="230" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1sosy45_di" bpmnElement="Activity_1sosy45">
+        <dc:Bounds x="400" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13pjsww_di" bpmnElement="Activity_0r5uy0n">
+        <dc:Bounds x="1140" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0blcvn6_di" bpmnElement="Activity_17jpph3">
+        <dc:Bounds x="1140" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_073dq7g_di" bpmnElement="Activity_1kfqh89" isExpanded="true">
+        <dc:Bounds x="460" y="380" width="460" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0adn1g6_di" bpmnElement="ExceptionHandling">
+        <dc:Bounds x="640" y="450" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1tgkh65_di" bpmnElement="Event_1tgkh65">
+        <dc:Bounds x="802" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="798" y="515" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1a4t5fh_di" bpmnElement="ErrorStart">
+        <dc:Bounds x="552" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="547" y="515" width="49" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1y7cyjq_di" bpmnElement="Flow_1y7cyjq">
+        <di:waypoint x="588" y="490" />
+        <di:waypoint x="640" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04drzxx_di" bpmnElement="Flow_04drzxx">
+        <di:waypoint x="740" y="490" />
+        <di:waypoint x="802" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0e7c7co_di" bpmnElement="Flow_0e7c7co">
+        <di:waypoint x="670" y="120" />
+        <di:waypoint x="720" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0f22wta_di" bpmnElement="Flow_0f22wta">
+        <di:waypoint x="820" y="120" />
+        <di:waypoint x="875" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02l3isc_di" bpmnElement="Flow_02l3isc">
+        <di:waypoint x="925" y="120" />
+        <di:waypoint x="980" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1la201r_di" bpmnElement="Flow_1la201r">
+        <di:waypoint x="900" y="145" />
+        <di:waypoint x="900" y="230" />
+        <di:waypoint x="980" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0v262as_di" bpmnElement="Flow_0v262as">
+        <di:waypoint x="1080" y="230" />
+        <di:waypoint x="1140" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18fzzym_di" bpmnElement="Flow_18fzzym">
+        <di:waypoint x="1080" y="120" />
+        <di:waypoint x="1140" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0iegivu_di" bpmnElement="Flow_0iegivu">
+        <di:waypoint x="500" y="120" />
+        <di:waypoint x="570" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rl1uqo_di" bpmnElement="Flow_1rl1uqo">
+        <di:waypoint x="1240" y="240" />
+        <di:waypoint x="1302" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13il8vy_di" bpmnElement="Flow_13il8vy">
+        <di:waypoint x="1240" y="120" />
+        <di:waypoint x="1302" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11ud344_di" bpmnElement="Flow_11ud344">
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="230" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yxsixk_di" bpmnElement="Flow_1yxsixk">
+        <di:waypoint x="330" y="120" />
+        <di:waypoint x="400" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

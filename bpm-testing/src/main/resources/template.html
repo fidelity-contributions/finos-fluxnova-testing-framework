@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .report-main{
+                width: 75%;
+                margin: auto;
+            }
+            .covered{
+                background-color: lightgreen;
+            }
+            .not-covered{
+                background-color: red;
+            }
+            .partial {
+                background-color: orange;
+            }
+            main{
+                font-family: 'Courier New', Courier, monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="report-main">
+            <h2>BPM Testing Framework Coverage - Time Run : {date}</h2>
+            <table>
+                <tr>
+                    <th>Line Number</th>
+                    <th>Line Covered</th>
+                </tr>
+                {coverageReport}
+            </table>
+            <div>
+                <h3>Coverage Level</h3>
+                {coveragePercent}
+            </div>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_18ujp9m" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn">
+  <bpmn:process id="PizzaOrderProcessKey" name="PizzaOrder" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:extensionElements />
+      <bpmn:outgoing>Flow_1crcoqw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1crcoqw" sourceRef="StartEvent_1" targetRef="GetFamilyMember" />
+    <bpmn:scriptTask id="GetFamilyMember" name="Get family member" scriptFormat="groovy">
+      <bpmn:incoming>Flow_1crcoqw</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bvm2c7</bpmn:outgoing>
+      <bpmn:script>def firstName = execution.getVariable("firstName");
+def isWeekend = execution.getVariable("isWeekend");
+
+def isVegan = false;
+
+if (firstName.equals("John")) {
+    isVegan = true;
+} else if (firstName.equals("Sam")) {
+    isVegan = false;
+}
+
+if (!isVegan &amp;&amp; isWeekend) {
+    execution.setVariable("restaurant", "Pizza Hut")
+} else {
+    execution.setVariable("restaurant", "Chopped")
+}
+
+execution.setVariable("isVegan", isVegan);</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1bvm2c7" sourceRef="GetFamilyMember" targetRef="Activity_0ohzg6o" />
+    <bpmn:serviceTask id="Activity_0ohzg6o" name="Initiate Order" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.ExampleOneDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="restaurantName">${restaurant}</camunda:inputParameter>
+          <camunda:outputParameter name="websiteUrl">${websiteUrl}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1bvm2c7</bpmn:incoming>
+      <bpmn:outgoing>Flow_04ilxn8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_1g1lek6" default="Flow_0w7usl0">
+      <bpmn:incoming>Flow_04ilxn8</bpmn:incoming>
+      <bpmn:outgoing>Flow_0hqafzy</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0w7usl0</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_0zs26r7">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">execution.setVariable("result", "success")</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_19j7kgg</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0hqafzy" sourceRef="Gateway_1g1lek6" targetRef="VeganMenuCA">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isVegan == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0w7usl0" sourceRef="Gateway_1g1lek6" targetRef="StandardMenuCA" />
+    <bpmn:sequenceFlow id="Flow_11m6t91" sourceRef="VeganMenuCA" targetRef="Activity_15hfvyw" />
+    <bpmn:sequenceFlow id="Flow_0e3iauv" sourceRef="StandardMenuCA" targetRef="Activity_15hfvyw" />
+    <bpmn:sequenceFlow id="Flow_19j7kgg" sourceRef="Activity_15hfvyw" targetRef="Event_0zs26r7" />
+    <bpmn:sequenceFlow id="Flow_04ilxn8" sourceRef="Activity_0ohzg6o" targetRef="Gateway_1g1lek6" />
+    <bpmn:endEvent id="Event_0cencs7">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="groovy" resource="error-logger.groovy" />
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_118pl26</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0hrefbj" errorRef="Error_0l4z2zp" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_118pl26" sourceRef="Event_1ummo94" targetRef="Event_0cencs7" />
+    <bpmn:boundaryEvent id="Event_1ummo94" name="Initiate_Order_Error" attachedToRef="Activity_0ohzg6o">
+      <bpmn:outgoing>Flow_118pl26</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0w30ql7" errorRef="Error_0l4z2zp" />
+    </bpmn:boundaryEvent>
+    <bpmn:callActivity id="StandardMenuCA" name="Standard Menu" calledElement="StandardMenuProcess">
+      <bpmn:extensionElements>
+        <camunda:in source="websiteUrl" target="websiteUrl" />
+        <camunda:out source="menu" target="menu" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0w7usl0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0e3iauv</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="VeganMenuCA" name="Vegan Menu" calledElement="VeganMenuProcess">
+      <bpmn:extensionElements>
+        <camunda:in source="websiteUrl" target="websiteUrl" />
+        <camunda:out source="menu" target="menu" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0hqafzy</bpmn:incoming>
+      <bpmn:outgoing>Flow_11m6t91</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:scriptTask id="Activity_15hfvyw" name="Order" scriptFormat="javascript" camunda:resource="order-details.js">
+      <bpmn:incoming>Flow_11m6t91</bpmn:incoming>
+      <bpmn:incoming>Flow_0e3iauv</bpmn:incoming>
+      <bpmn:outgoing>Flow_19j7kgg</bpmn:outgoing>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmn:error id="Error_0l4z2zp" name="Error_32a89fm" errorCode="500" camunda:errorMessage="Error" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="PizzaOrderProcessKey">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1krdt8z_di" bpmnElement="GetFamilyMember">
+        <dc:Bounds x="280" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14tkhty_di" bpmnElement="Activity_0ohzg6o">
+        <dc:Bounds x="480" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1d7qp0d" bpmnElement="Gateway_1g1lek6" isMarkerVisible="true">
+        <dc:Bounds x="685" y="95" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_14cibp8" bpmnElement="Event_0zs26r7">
+        <dc:Bounds x="1232" y="222" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0cencs7_di" bpmnElement="Event_0cencs7">
+        <dc:Bounds x="512" y="282" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_12yl43h_di" bpmnElement="StandardMenuCA">
+        <dc:Bounds x="850" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0mj6x4u_di" bpmnElement="VeganMenuCA">
+        <dc:Bounds x="850" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_02mvsq9_di" bpmnElement="Activity_15hfvyw">
+        <dc:Bounds x="1050" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ummo94_di" bpmnElement="Event_1ummo94">
+        <dc:Bounds x="512" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="489" y="185" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1crcoqw_di" bpmnElement="Flow_1crcoqw">
+        <di:waypoint x="218" y="120" />
+        <di:waypoint x="280" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bvm2c7_di" bpmnElement="Flow_1bvm2c7">
+        <di:waypoint x="380" y="120" />
+        <di:waypoint x="480" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0g2bp3e" bpmnElement="Flow_0hqafzy">
+        <di:waypoint x="710" y="145" />
+        <di:waypoint x="710" y="350" />
+        <di:waypoint x="850" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_01rc4e0" bpmnElement="Flow_0w7usl0">
+        <di:waypoint x="735" y="120" />
+        <di:waypoint x="850" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_0wn9d8w" bpmnElement="Flow_11m6t91">
+        <di:waypoint x="950" y="350" />
+        <di:waypoint x="995" y="350" />
+        <di:waypoint x="995" y="270" />
+        <di:waypoint x="1050" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_1trs1y5" bpmnElement="Flow_0e3iauv">
+        <di:waypoint x="950" y="120" />
+        <di:waypoint x="995" y="120" />
+        <di:waypoint x="995" y="210" />
+        <di:waypoint x="1050" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_072o5og" bpmnElement="Flow_19j7kgg">
+        <di:waypoint x="1150" y="240" />
+        <di:waypoint x="1232" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04ilxn8_di" bpmnElement="Flow_04ilxn8">
+        <di:waypoint x="580" y="120" />
+        <di:waypoint x="685" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_118pl26_di" bpmnElement="Flow_118pl26">
+        <di:waypoint x="530" y="178" />
+        <di:waypoint x="530" y="282" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

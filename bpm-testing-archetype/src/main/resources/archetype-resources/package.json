@@ -1,0 +1,11 @@
+{
+  "name": "bpm-testing-framework",
+  "version": "1.0.0",
+  "description": "A framework for testing BPMN models and scripts",
+  "private": true,
+  "author": "<author>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "acorn": "8.14.1"
+  }
+}

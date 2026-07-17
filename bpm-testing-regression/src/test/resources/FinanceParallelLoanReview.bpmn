@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" id="Definitions_18ujp9m" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0">
+  <bpmn:process id="FinanceLoanReviewProcess" name="Finance Loan Review Process" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="StartEvent_LoanReceived" name="Loan Application Received" camunda:asyncBefore="true">
+      <bpmn:outgoing>Flow_Start_To_Split</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="Gateway_SplitChecks" name="Run Checks in Parallel">
+      <bpmn:incoming>Flow_Start_To_Split</bpmn:incoming>
+      <bpmn:outgoing>Flow_Split_To_Credit</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Split_To_Risk</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="Gateway_JoinChecks" name="Checks Completed" camunda:asyncBefore="true" camunda:asyncAfter="true">
+      <bpmn:incoming>Flow_Credit_To_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Risk_To_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_Join_To_Decision</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="EndEvent_ApprovedOrRejected" name="Decision Recorded">
+      <bpmn:incoming>Flow_Decision_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_To_Split" sourceRef="StartEvent_LoanReceived" targetRef="Gateway_SplitChecks" />
+    <bpmn:sequenceFlow id="Flow_Split_To_Credit" sourceRef="Gateway_SplitChecks" targetRef="Task_CreditCheck" />
+    <bpmn:sequenceFlow id="Flow_Split_To_Risk" sourceRef="Gateway_SplitChecks" targetRef="Task_RiskScore" />
+    <bpmn:sequenceFlow id="Flow_Credit_To_Join" sourceRef="Task_CreditCheck" targetRef="Gateway_JoinChecks" />
+    <bpmn:sequenceFlow id="Flow_Risk_To_Join" sourceRef="Task_RiskScore" targetRef="Gateway_JoinChecks" />
+    <bpmn:sequenceFlow id="Flow_Join_To_Decision" sourceRef="Gateway_JoinChecks" targetRef="Task_FinalDecision" />
+    <bpmn:sequenceFlow id="Flow_Decision_To_End" sourceRef="Task_FinalDecision" targetRef="EndEvent_ApprovedOrRejected" />
+    <bpmn:scriptTask id="Task_CreditCheck" name="Credit Bureau Check" scriptFormat="javascript">
+      <bpmn:incoming>Flow_Split_To_Credit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Credit_To_Join</bpmn:outgoing>
+      <bpmn:script>//creditworthiness and repayment history.
+const payment_failures = execution.getVariable("payment_failures");
+const credit_limits_breached = execution.getVariable("credit_limits_breached");
+const account_status = execution.getVariable("account_status");
+
+if (payment_failures &gt; 0 || credit_limits_breached == 'true' || account_status == 'arrears') {
+    execution.setVariable("credit_check_status", "FAILED");
+} else {
+    execution.setVariable("credit_check_status", "PASSED");
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Task_RiskScore" name="Internal Risk Score" scriptFormat="javascript">
+      <bpmn:incoming>Flow_Split_To_Risk</bpmn:incoming>
+      <bpmn:outgoing>Flow_Risk_To_Join</bpmn:outgoing>
+      <bpmn:script>//Check the risk score
+const score = execution.getVariable("risk_score");
+if (score &gt; 5) {
+    execution.setVariable("risk_level", "LOW");
+}
+else {
+    execution.setVariable("risk_level", "HIGH");
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Task_FinalDecision" name="Final Underwriting Decision" scriptFormat="javascript">
+      <bpmn:incoming>Flow_Join_To_Decision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decision_To_End</bpmn:outgoing>
+      <bpmn:script>//Check the scores
+const credit_check_status = execution.getVariable("credit_check_status");
+const risk_level = execution.getVariable("risk_level");
+
+if (credit_check_status == 'PASSED' &amp;&amp; risk_level == 'LOW') {
+    execution.setVariable("LOAN_STATUS", "APPROVED");
+}
+else {
+    execution.setVariable("LOAN_STATUS", "REJECTED");
+}</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_FinanceLoanReviewProcess">
+    <bpmndi:BPMNPlane id="BPMNPlane_FinanceLoanReviewProcess" bpmnElement="FinanceLoanReviewProcess">
+      <bpmndi:BPMNShape id="Shape_StartEvent_LoanReceived" bpmnElement="StartEvent_LoanReceived">
+        <dc:Bounds x="180" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="196" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_SplitChecks" bpmnElement="Gateway_SplitChecks" isMarkerVisible="true">
+        <dc:Bounds x="280" y="153" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="340" y="164" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_JoinChecks" bpmnElement="Gateway_JoinChecks" isMarkerVisible="true">
+        <dc:Bounds x="600" y="153" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="536" y="164" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_EndEvent_ApprovedOrRejected" bpmnElement="EndEvent_ApprovedOrRejected">
+        <dc:Bounds x="960" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="954" y="196" width="48" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xfluvx_di" bpmnElement="Task_CreditCheck">
+        <dc:Bounds x="410" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1i2mp5a_di" bpmnElement="Task_RiskScore">
+        <dc:Bounds x="410" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_187626z_di" bpmnElement="Task_FinalDecision">
+        <dc:Bounds x="710" y="138" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_Start_To_Split" bpmnElement="Flow_Start_To_Split">
+        <di:waypoint x="216" y="178" />
+        <di:waypoint x="280" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Split_To_Credit" bpmnElement="Flow_Split_To_Credit">
+        <di:waypoint x="305" y="153" />
+        <di:waypoint x="305" y="100" />
+        <di:waypoint x="410" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Split_To_Risk" bpmnElement="Flow_Split_To_Risk">
+        <di:waypoint x="305" y="203" />
+        <di:waypoint x="305" y="270" />
+        <di:waypoint x="410" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Credit_To_Join" bpmnElement="Flow_Credit_To_Join">
+        <di:waypoint x="510" y="100" />
+        <di:waypoint x="625" y="100" />
+        <di:waypoint x="625" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Risk_To_Join" bpmnElement="Flow_Risk_To_Join">
+        <di:waypoint x="510" y="270" />
+        <di:waypoint x="625" y="270" />
+        <di:waypoint x="625" y="203" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Join_To_Decision" bpmnElement="Flow_Join_To_Decision">
+        <di:waypoint x="650" y="178" />
+        <di:waypoint x="710" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_Decision_To_End" bpmnElement="Flow_Decision_To_End">
+        <di:waypoint x="810" y="178" />
+        <di:waypoint x="960" y="178" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

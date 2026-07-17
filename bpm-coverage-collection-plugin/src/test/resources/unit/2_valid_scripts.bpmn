@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_19j89zg" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn">
+  <bpmn:process id="AnotherDemo" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0p9sv38</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_02qw7xo">
+      <bpmn:incoming>Flow_1sni3mi</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0p9sv38" sourceRef="StartEvent_1" targetRef="Activity_0jycfse" />
+    <bpmn:sequenceFlow id="Flow_12icr85" sourceRef="Activity_0jycfse" targetRef="Activity_05f9fel" />
+    <bpmn:sequenceFlow id="Flow_1o5hj5g" sourceRef="Activity_05f9fel" targetRef="Activity_08qcs3s" />
+    <bpmn:sequenceFlow id="Flow_1sni3mi" sourceRef="Activity_08qcs3s" targetRef="Event_02qw7xo" />
+    <bpmn:userTask id="Activity_05f9fel" name="user task">
+      <bpmn:incoming>Flow_12icr85</bpmn:incoming>
+      <bpmn:outgoing>Flow_1o5hj5g</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_0jycfse" name="script 1" scriptFormat="js">
+      <bpmn:incoming>Flow_0p9sv38</bpmn:incoming>
+      <bpmn:outgoing>Flow_12icr85</bpmn:outgoing>
+      <bpmn:script>var k=0;
+var j = 1+1;
+
+ContinueStatement(5);
+
+function ContinueStatement(input) {
+  let i = 0;
+  while (i &lt; 10) {
+    if (i === input) {
+      i++;
+      continue;
+    }
+    console.log(i);
+    i++;
+  }
+}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_08qcs3s" name="script 2" scriptFormat="groovy">
+      <bpmn:incoming>Flow_1o5hj5g</bpmn:incoming>
+      <bpmn:outgoing>Flow_1sni3mi</bpmn:outgoing>
+      <bpmn:script>def i=0;
+
+while (i&gt;0) {
+ if (i == 5) {
+   def j = j * 5;
+   return j;
+ }
+}</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="AnotherDemo">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_02qw7xo_di" bpmnElement="Event_02qw7xo">
+        <dc:Bounds x="1012" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0vme2ly_di" bpmnElement="Activity_05f9fel">
+        <dc:Bounds x="490" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1i6zra6_di" bpmnElement="Activity_0jycfse">
+        <dc:Bounds x="290" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ypivmu_di" bpmnElement="Activity_08qcs3s">
+        <dc:Bounds x="720" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0p9sv38_di" bpmnElement="Flow_0p9sv38">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="290" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12icr85_di" bpmnElement="Flow_12icr85">
+        <di:waypoint x="390" y="117" />
+        <di:waypoint x="490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1o5hj5g_di" bpmnElement="Flow_1o5hj5g">
+        <di:waypoint x="590" y="117" />
+        <di:waypoint x="720" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1sni3mi_di" bpmnElement="Flow_1sni3mi">
+        <di:waypoint x="820" y="117" />
+        <di:waypoint x="1012" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

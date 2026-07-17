@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_0limxz6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn">
+  <bpmn:process id="ExternalAndInlineScript" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_167iovf</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_0wtv8qb">
+      <bpmn:incoming>Flow_089016o</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_167iovf" sourceRef="StartEvent_1" targetRef="Activity_1pclbig" />
+    <bpmn:sequenceFlow id="Flow_1wxxui2" sourceRef="Activity_1pclbig" targetRef="Activity_1roy2a1" />
+    <bpmn:scriptTask id="Activity_1pclbig" name="external1" scriptFormat="groovy" camunda:resource="test.groovy">
+      <bpmn:incoming>Flow_167iovf</bpmn:incoming>
+      <bpmn:outgoing>Flow_1wxxui2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_1roy2a1" name="script2" scriptFormat="groovy">
+      <bpmn:incoming>Flow_1wxxui2</bpmn:incoming>
+      <bpmn:outgoing>Flow_089016o</bpmn:outgoing>
+      <bpmn:script>def i = 2;</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_089016o" sourceRef="Activity_1roy2a1" targetRef="Event_0wtv8qb" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ExternalAndInlineScript">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0wtv8qb_di" bpmnElement="Event_0wtv8qb">
+        <dc:Bounds x="632" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1kozl3d_di" bpmnElement="Activity_1pclbig">
+        <dc:Bounds x="280" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1x7aloe" bpmnElement="Activity_1roy2a1">
+        <dc:Bounds x="470" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_167iovf_di" bpmnElement="Flow_167iovf">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="280" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_089016o_di" bpmnElement="Flow_089016o">
+        <di:waypoint x="570" y="117" />
+        <di:waypoint x="632" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wxxui2_di" bpmnElement="Flow_1wxxui2">
+        <di:waypoint x="380" y="117" />
+        <di:waypoint x="470" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

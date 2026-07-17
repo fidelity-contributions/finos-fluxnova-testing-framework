@@ -1,0 +1,11 @@
+{
+  "name": "bpm-testing-framework",
+  "version": "1.0.0",
+  "description": "A framework for testing BPMN models",
+  "private": true,
+  "author": "FINOS <http://fluxnova.finos.org>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "acorn": "8.14.1"
+  }
+}
