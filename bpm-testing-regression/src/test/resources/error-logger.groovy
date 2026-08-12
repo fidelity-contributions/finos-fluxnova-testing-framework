@@ -1,0 +1,1 @@
+execution.setVariable("result", "fail")

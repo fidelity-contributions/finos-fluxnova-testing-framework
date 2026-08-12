@@ -1,0 +1,766 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" id="Definitions_CustomerOnboarding" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="Customer_Onboarding_Process" name="AP999999 Customer Onboarding - Finance Application" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:documentation>Customer Onboarding Process for Finance Application
+
+This process handles:
+1. Customer submits personal and investment details
+2. Support team reviews and validates data
+3. Request additional information if needed
+4. Asset-based routing (under/over $1M)
+5. Manager approval for high-value accounts
+6. Account creation and customer notification</bpmn:documentation>
+    <bpmn:extensionElements>
+      <camunda:properties>
+        <camunda:property name="applicationId" value="AP999999" />
+        <camunda:property name="processType" value="CustomerOnboarding" />
+      </camunda:properties>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="StartEvent_CustomerSubmission" name="Customer Submits Application" camunda:asyncBefore="true">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">
+System.out.println("=== CUSTOMER ONBOARDING PROCESS STARTED ===");
+System.out.println("Process Instance ID: " + execution.getProcessInstanceId());
+System.out.println("Start Time: " + new Date().toGMTString());
+System.out.println("============================================");
+</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_CustomerSubmission" targetRef="Task_CaptureCustomerData" />
+    <bpmn:userTask id="Task_CaptureCustomerData" name="Customer Enters Personal &#38; Investment Details" camunda:asyncBefore="true" camunda:assignee="${customerId}">
+      <bpmn:documentation>Customer provides:
+- Personal Information (Name, Email, Phone, Address, SSN/Tax ID)
+- Investment Details (Personal Investments, IRA Accounts, 401k, etc.)
+- Total Asset Value
+- Investment Goals and Risk Tolerance</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="customerName" label="Full Name" type="string" />
+          <camunda:formField id="customerEmail" label="Email Address" type="string" />
+          <camunda:formField id="customerPhone" label="Phone Number" type="string" />
+          <camunda:formField id="customerAddress" label="Residential Address" type="string" />
+          <camunda:formField id="taxId" label="Tax ID / SSN" type="string" />
+          <camunda:formField id="dateOfBirth" label="Date of Birth" type="date" />
+          <camunda:formField id="personalInvestments" label="Personal Investment Accounts" type="string" />
+          <camunda:formField id="iraAccounts" label="IRA Account Details" type="string" />
+          <camunda:formField id="retirementAccounts" label="401k/Retirement Accounts" type="string" />
+          <camunda:formField id="totalAssetValue" label="Total Asset Value (USD)" type="long" />
+          <camunda:formField id="investmentGoals" label="Investment Goals" type="string" />
+          <camunda:formField id="riskTolerance" label="Risk Tolerance" type="enum">
+            <camunda:value id="conservative" name="Conservative" />
+            <camunda:value id="moderate" name="Moderate" />
+            <camunda:value id="aggressive" name="Aggressive" />
+          </camunda:formField>
+        </camunda:formData>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="submissionTimestamp">${now()}</camunda:outputParameter>
+          <camunda:outputParameter name="applicationStatus">SUBMITTED</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:incoming>Flow_BackToCustomer</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_CaptureCustomerData" targetRef="Task_ValidateInitialData" />
+    <bpmn:scriptTask id="Task_ValidateInitialData" name="Validate &#38; Prepare Application Data" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+      <bpmn:script>def logger = org.slf4j.LoggerFactory.getLogger("Logger");
+// Log submission
+logger.info("Customer application received");
+logger.info("Customer Name: " + execution.getVariable("customerName"));
+logger.info("Email: " + execution.getVariable("customerEmail"));
+logger.info("Total Assets: \$" + execution.getVariable("totalAssetValue"));
+
+// Generate application ID only if not exists
+if (execution.getVariable("applicationId") == null) {
+    var applicationId = "APP-" + new Date().getTime();
+    execution.setVariable("applicationId", applicationId);
+    logger.info("Generated Application ID: " + applicationId);
+}
+
+// Set review queue
+execution.setVariable("reviewQueue", "support-team-queue");
+
+// Initialize review counter
+if (execution.getVariable("reviewCount") == null) {
+    execution.setVariable("reviewCount", 0);
+}
+
+// Increment review count
+var reviewCount = execution.getVariable("reviewCount");
+execution.setVariable("reviewCount", reviewCount + 1);
+
+logger.info("Review Count: " + (reviewCount + 1));
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_ValidateInitialData" targetRef="Task_NotifySupportTeam" />
+    <bpmn:serviceTask id="Task_NotifySupportTeam" name="Send Email to Support Team" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendEmailDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="to">support-team@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="from">noreply@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="subject">New Customer Application - ${applicationId}</camunda:inputParameter>
+          <camunda:inputParameter name="body">A new customer application requires review.
+
+Application ID: ${applicationId}
+Customer Name: ${customerName}
+Email: ${customerEmail}
+Phone: ${customerPhone}
+Total Assets: $${totalAssetValue}
+Submission Date: ${submissionTimestamp}
+
+Please review and validate the application in the system.
+
+Review Count: ${reviewCount}</camunda:inputParameter>
+          <camunda:outputParameter name="emailStatus">${emailResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_NotifySupportTeam" targetRef="Task_SupportReview" />
+    <bpmn:userTask id="Task_SupportReview" name="Support Agent Reviews &#38; Validates Data" camunda:asyncBefore="true" camunda:candidateGroups="support-team">
+      <bpmn:documentation>Support agent reviews:
+- Completeness of personal information
+- Validity of investment details
+- Documentation requirements
+- Compliance with regulations
+
+Decision: Approve or Request More Information</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="dataComplete" label="Is all required data provided?" type="boolean" />
+          <camunda:formField id="missingDataDescription" label="Missing Data Description" type="string" />
+          <camunda:formField id="supportComments" label="Support Agent Comments" type="string" />
+          <camunda:formField id="supportApproval" label="Approve Application?" type="boolean" />
+        </camunda:formData>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="reviewTimestamp">${now()}</camunda:outputParameter>
+          <camunda:outputParameter name="reviewedBy">support agent1</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_SupportReview" targetRef="Gateway_DataComplete" />
+    <bpmn:exclusiveGateway id="Gateway_DataComplete" name="All Required Data Provided?" default="Flow_DataIncomplete">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_DataComplete</bpmn:outgoing>
+      <bpmn:outgoing>Flow_DataIncomplete</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_DataComplete" name="Yes - Approved" sourceRef="Gateway_DataComplete" targetRef="Task_CheckAssetValue">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${dataComplete == true &amp;&amp; supportApproval == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_DataIncomplete" name="No - More Info Needed" sourceRef="Gateway_DataComplete" targetRef="Task_RequestMoreInfo" />
+    <bpmn:serviceTask id="Task_RequestMoreInfo" name="Send Email Requesting More Information" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendEmailDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="to">${customerEmail}</camunda:inputParameter>
+          <camunda:inputParameter name="from">support@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="subject">Additional Information Required - Application ${applicationId}</camunda:inputParameter>
+          <camunda:inputParameter name="body">Dear ${customerName},
+
+Thank you for your application (${applicationId}).
+
+We need additional information to process your account opening request:
+
+${missingDataDescription}
+
+Support Agent Comments: ${supportComments}
+
+Please log in to your application portal and provide the requested information.
+
+Best regards,
+Customer Support Team</camunda:inputParameter>
+          <camunda:outputParameter name="requestEmailStatus">${emailResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_DataIncomplete</bpmn:incoming>
+      <bpmn:incoming>Flow_AfterRejection</bpmn:incoming>
+      <bpmn:outgoing>Flow_BackToCustomer</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_BackToCustomer" sourceRef="Task_RequestMoreInfo" targetRef="Task_CaptureCustomerData" />
+    <bpmn:scriptTask id="Task_CheckAssetValue" name="Determine Account Type Based on Assets" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_DataComplete</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:script>
+def assetValue = execution.getVariable("totalAssetValue");
+def threshold = 1000000; // $1 Million
+
+System.out.println("Checking asset value: \$" + assetValue);
+System.out.println("Threshold: \$" + threshold);
+
+if (assetValue &gt;= threshold) {
+    execution.setVariable("requiresManagerApproval", true);
+    execution.setVariable("accountType", "PREMIUM");
+    System.out.println("HIGH VALUE ACCOUNT - Manager approval required");
+} else {
+    execution.setVariable("requiresManagerApproval", false);
+    execution.setVariable("accountType", "STANDARD");
+    System.out.println("STANDARD ACCOUNT - Auto-approved");
+}
+
+execution.setVariable("applicationStatus", "VALIDATED");
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_CheckAssetValue" targetRef="Gateway_AssetThreshold" />
+    <bpmn:exclusiveGateway id="Gateway_AssetThreshold" name="Assets ≥ $1M?" default="Flow_StandardAccount">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_HighValueAccount</bpmn:outgoing>
+      <bpmn:outgoing>Flow_StandardAccount</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_HighValueAccount" name="Yes - Premium Account" sourceRef="Gateway_AssetThreshold" targetRef="Task_NotifyManager">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresManagerApproval == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_StandardAccount" name="No - Standard Account" sourceRef="Gateway_AssetThreshold" targetRef="Task_OpenAccount" />
+    <bpmn:serviceTask id="Task_NotifyManager" name="Send Email to Manager for Approval" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendEmailDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="to">manager@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="from">support@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="subject">Premium Account Approval Required - ${applicationId}</camunda:inputParameter>
+          <camunda:inputParameter name="body">A high-value customer application requires manager approval.
+
+Application ID: ${applicationId}
+Customer Name: ${customerName}
+Email: ${customerEmail}
+Phone: ${customerPhone}
+Total Assets: $${totalAssetValue}
+Account Type: ${accountType}
+
+Investment Details:
+- Personal Investments: ${personalInvestments}
+- IRA Accounts: ${iraAccounts}
+- Retirement Accounts: ${retirementAccounts}
+
+Risk Tolerance: ${riskTolerance}
+Investment Goals: ${investmentGoals}
+
+Support Agent: ${reviewedBy}
+Support Comments: ${supportComments}
+
+Please review and approve/reject this application.</camunda:inputParameter>
+          <camunda:outputParameter name="managerEmailStatus">${emailResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HighValueAccount</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Task_NotifyManager" targetRef="Task_ManagerApproval" />
+    <bpmn:userTask id="Task_ManagerApproval" name="Manager Reviews &#38; Approves Premium Account" camunda:asyncBefore="true" camunda:candidateGroups="manager-group">
+      <bpmn:documentation>Manager reviews high-value account application:
+- Customer profile and asset verification
+- Risk assessment
+- Compliance requirements
+- Strategic value to organization
+
+Decision: Approve or Reject</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="managerApproval" label="Approve Premium Account?" type="boolean" />
+          <camunda:formField id="managerComments" label="Manager Comments" type="string" />
+          <camunda:formField id="rejectionReason" label="Rejection Reason (if applicable)" type="string" />
+        </camunda:formData>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="managerReviewTimestamp">${now()}</camunda:outputParameter>
+          <camunda:outputParameter name="approvedBy">Snr Manager</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_ManagerApproval" targetRef="Gateway_ManagerDecision" />
+    <bpmn:exclusiveGateway id="Gateway_ManagerDecision" name="Manager Approved?" default="Flow_ManagerReject">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ManagerReject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_ManagerApprove" name="Yes" sourceRef="Gateway_ManagerDecision" targetRef="Task_OpenAccount">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${managerApproval == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ManagerReject" name="No" sourceRef="Gateway_ManagerDecision" targetRef="Task_LogRejection" />
+    <bpmn:scriptTask id="Task_LogRejection" name="Log Manager Rejection" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_ManagerReject</bpmn:incoming>
+      <bpmn:outgoing>Flow_AfterRejection</bpmn:outgoing>
+      <bpmn:script>
+System.out.println("APPLICATION REJECTED BY MANAGER");
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Customer: " + execution.getVariable("customerName"));
+System.out.println("Rejection Reason: " + execution.getVariable("rejectionReason"));
+System.out.println("Manager: " + execution.getVariable("approvedBy"));
+
+execution.setVariable("applicationStatus", "REJECTED_BY_MANAGER");
+execution.setVariable("missingDataDescription", "Your premium account application requires additional review. " + execution.getVariable("rejectionReason"));
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_AfterRejection" sourceRef="Task_LogRejection" targetRef="Task_RequestMoreInfo" />
+    <bpmn:serviceTask id="Task_OpenAccount" name="Create Customer Account (HTTP)" camunda:asyncBefore="true" camunda:asyncAfter="true">
+      <bpmn:extensionElements>
+        <camunda:connector>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="url">${accounts_url}/create</camunda:inputParameter>
+            <camunda:inputParameter name="method">POST</camunda:inputParameter>
+            <camunda:inputParameter name="headers">
+              <camunda:map>
+                <camunda:entry key="Content-Type">application/json</camunda:entry>
+                <camunda:entry key="Authorization">Bearer ${apiToken}</camunda:entry>
+                <camunda:entry key="X-Application-ID">${applicationId}</camunda:entry>
+              </camunda:map>
+            </camunda:inputParameter>
+            <camunda:inputParameter name="payload">
+              <camunda:script scriptFormat="javascript">JSON.stringify({
+  "applicationId": execution.getVariable("applicationId"),
+  "customerName": execution.getVariable("customerName"),
+  "email": execution.getVariable("customerEmail"),
+  "phone": execution.getVariable("customerPhone"),
+  "address": execution.getVariable("customerAddress"),
+  "taxId": execution.getVariable("taxId"),
+  "dateOfBirth": execution.getVariable("dateOfBirth"),
+  "accountType": execution.getVariable("accountType"),
+  "totalAssets": execution.getVariable("totalAssetValue"),
+  "personalInvestments": execution.getVariable("personalInvestments"),
+  "iraAccounts": execution.getVariable("iraAccounts"),
+  "retirementAccounts": execution.getVariable("retirementAccounts"),
+  "investmentGoals": execution.getVariable("investmentGoals"),
+  "riskTolerance": execution.getVariable("riskTolerance"),
+  "approvedBy": execution.getVariable("reviewedBy"),
+  "managerApproval": execution.getVariable("managerApproval") || false,
+  "createdDate": new Date().toGMTString()
+});
+</camunda:script>
+            </camunda:inputParameter>
+            <camunda:outputParameter name="accountCreationResponse">
+              <camunda:script scriptFormat="groovy">import groovy.json.JsonSlurper;
+import org.finos.fluxnova.bpm.engine.delegate.BpmnError;
+
+def jsonSlurper = new JsonSlurper();
+
+if (statusCode != 200 &amp;&amp; statusCode != 201) {
+    System.out.println("Account creation failed with status: " + statusCode);
+    throw new BpmnError("HTTP Status " + statusCode + ": Account creation failed");
+}
+
+System.out.println("Account created successfully with status " + statusCode);
+
+def responseObj = jsonSlurper.parseText(response);
+connector.setVariable("accountNumber", responseObj.accountNumber);
+connector.setVariable("accountId", responseObj.accountId);
+
+return response;
+</camunda:script>
+            </camunda:outputParameter>
+            <camunda:outputParameter name="httpStatusCode">${statusCode}</camunda:outputParameter>
+          </camunda:inputOutput>
+          <camunda:connectorId>http-connector</camunda:connectorId>
+        </camunda:connector>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_StandardAccount</bpmn:incoming>
+      <bpmn:incoming>Flow_ManagerApprove</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_OpenAccount" targetRef="Task_LogAccountCreation" />
+    <bpmn:scriptTask id="Task_LogAccountCreation" name="Log Account Creation" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10</bpmn:outgoing>
+      <bpmn:script>
+System.out.println("\n=== ACCOUNT CREATED SUCCESSFULLY ===");
+def accountNumber = execution.getVariable("accountNumber");
+def accountType = execution.getVariable("accountType");
+def customerName = execution.getVariable("customerName");
+
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Account Number: " + accountNumber);
+System.out.println("Account Type: " + accountType);
+System.out.println("Customer: " + customerName);
+System.out.println("Email: " + execution.getVariable("customerEmail"));
+System.out.println("Total Assets: \$" + execution.getVariable("totalAssetValue"));
+System.out.println("====================================");
+
+execution.setVariable("applicationStatus", "ACCOUNT_OPENED");
+
+// Prepare SMS message - ensure phone has country code
+def phone = execution.getVariable("customerPhone").toString();
+if (!phone.startsWith("+")) {
+    phone = "+1" + phone; // Default to US
+    execution.setVariable("customerPhone", phone);
+}
+
+def smsMessage = "Congratulations " + customerName + "! Your " + accountType +
+                 " account has been successfully opened. Account Number: " + accountNumber +
+                 ". Welcome to our finance family!";
+execution.setVariable("smsMessage", smsMessage);
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_LogAccountCreation" targetRef="Task_SendSMSConfirmation" />
+    <bpmn:serviceTask id="Task_SendSMSConfirmation" name="Send SMS Confirmation to Customer" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendSMSDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="phoneNumber">${customerPhone}</camunda:inputParameter>
+          <camunda:inputParameter name="message">${smsMessage}</camunda:inputParameter>
+          <camunda:outputParameter name="smsResponse">${smsResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_SendSMSConfirmation" targetRef="Task_SendWelcomeEmail" />
+    <bpmn:serviceTask id="Task_SendWelcomeEmail" name="Send Welcome Email with Account Details" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendEmailDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="to">${customerEmail}</camunda:inputParameter>
+          <camunda:inputParameter name="from">welcome@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="subject">Welcome to Finance Company - Account ${accountNumber}</camunda:inputParameter>
+          <camunda:inputParameter name="body">Dear ${customerName},
+
+Congratulations! Your account has been successfully opened.
+
+Account Details:
+- Account Number: ${accountNumber}
+- Account Type: ${accountType}
+- Application ID: ${applicationId}
+- Total Assets: $${totalAssetValue}
+
+Next Steps:
+1. Log in to your account portal at https://portal.financecompany.com
+2. Set up your investment preferences
+3. Fund your account
+4. Start investing
+
+If you have any questions, please contact our support team at support@financecompany.com or call 1-800-FINANCE.
+
+Welcome to our family!
+
+Best regards,
+Finance Company Team</camunda:inputParameter>
+          <camunda:outputParameter name="welcomeEmailStatus">${emailResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:incoming>Flow_SMSErrorContinue</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_SendWelcomeEmail" targetRef="EndEvent_Success" />
+    <bpmn:endEvent id="EndEvent_Success" name="Account Opened Successfully">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">
+System.out.println("=== ONBOARDING PROCESS COMPLETED ===");
+System.out.println("Process Instance ID: " + execution.getProcessInstanceId());
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Account Number: " + execution.getVariable("accountNumber"));
+System.out.println("Customer: " + execution.getVariable("customerName"));
+System.out.println("Account Type: " + execution.getVariable("accountType"));
+System.out.println("Status: " + execution.getVariable("applicationStatus"));
+System.out.println("End Time: " + new Date().toGMTString());
+System.out.println("=====================================");
+</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_AccountCreationError" name="Account Creation Failed" attachedToRef="Task_OpenAccount">
+      <bpmn:outgoing>Flow_AccountError</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_Account" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_AccountError" sourceRef="Event_AccountCreationError" targetRef="Task_HandleAccountError" />
+    <bpmn:scriptTask id="Task_HandleAccountError" name="Handle Account Creation Error" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_AccountError</bpmn:incoming>
+      <bpmn:outgoing>Flow_ErrorToEnd</bpmn:outgoing>
+      <bpmn:script>
+System.out.println("CRITICAL ERROR: Account creation failed");
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Customer: " + execution.getVariable("customerName"));
+
+execution.setVariable("applicationStatus", "ERROR_ACCOUNT_CREATION");
+execution.setVariable("errorMessage", "Technical error during account creation. Support team notified.");
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_ErrorToEnd" sourceRef="Task_HandleAccountError" targetRef="Task_NotifyErrorToSupport" />
+    <bpmn:serviceTask id="Task_NotifyErrorToSupport" name="Notify Support of Error" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:class="org.finos.fluxnova.bpm.test.example.delegates.SendEmailDelegate">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="to">support-team@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="from">system@financecompany.com</camunda:inputParameter>
+          <camunda:inputParameter name="subject">URGENT: Account Creation Failed - ${applicationId}</camunda:inputParameter>
+          <camunda:inputParameter name="body">CRITICAL ERROR: Account creation failed for approved application.
+
+Application ID: ${applicationId}
+Customer Name: ${customerName}
+Email: ${customerEmail}
+Account Type: ${accountType}
+Total Assets: $${totalAssetValue}
+
+Error: ${errorMessage}
+
+Please investigate and contact customer immediately.</camunda:inputParameter>
+          <camunda:outputParameter name="errorEmailStatus">${emailResult}</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ErrorToEnd</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToErrorEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToErrorEnd" sourceRef="Task_NotifyErrorToSupport" targetRef="EndEvent_Error" />
+    <bpmn:endEvent id="EndEvent_Error" name="Process Failed - Manual Intervention Required">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">
+System.out.println("=== ONBOARDING PROCESS FAILED ===");
+System.out.println("Process Instance ID: " + execution.getProcessInstanceId());
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Error: " + execution.getVariable("errorMessage"));
+System.out.println("==================================");
+</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToErrorEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_SMSError" name="SMS Failed" attachedToRef="Task_SendSMSConfirmation">
+      <bpmn:outgoing>Flow_SMSError</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_SMS" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_SMSError" sourceRef="Event_SMSError" targetRef="Task_LogSMSError" />
+    <bpmn:scriptTask id="Task_LogSMSError" name="Log SMS Error &#38; Continue" camunda:asyncBefore="true" scriptFormat="groovy">
+      <bpmn:incoming>Flow_SMSError</bpmn:incoming>
+      <bpmn:outgoing>Flow_SMSErrorContinue</bpmn:outgoing>
+      <bpmn:script>
+System.out.println("WARNING: SMS notification failed");
+System.out.println("Customer will receive email notification instead");
+System.out.println("Application ID: " + execution.getVariable("applicationId"));
+System.out.println("Customer Phone: " + execution.getVariable("customerPhone"));
+
+execution.setVariable("smsDeliveryFailed", true);
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_SMSErrorContinue" sourceRef="Task_LogSMSError" targetRef="Task_SendWelcomeEmail" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Customer_Onboarding_Process">
+      <bpmndi:BPMNShape id="StartEvent_CustomerSubmission_di" bpmnElement="StartEvent_CustomerSubmission">
+        <dc:Bounds x="162" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="152" y="315" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CaptureCustomerData_di" bpmnElement="Task_CaptureCustomerData">
+        <dc:Bounds x="270" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateInitialData_di" bpmnElement="Task_ValidateInitialData">
+        <dc:Bounds x="440" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifySupportTeam_di" bpmnElement="Task_NotifySupportTeam">
+        <dc:Bounds x="610" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SupportReview_di" bpmnElement="Task_SupportReview">
+        <dc:Bounds x="780" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DataComplete_di" bpmnElement="Gateway_DataComplete" isMarkerVisible="true">
+        <dc:Bounds x="955" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="945" y="225" width="70" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestMoreInfo_di" bpmnElement="Task_RequestMoreInfo">
+        <dc:Bounds x="930" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckAssetValue_di" bpmnElement="Task_CheckAssetValue">
+        <dc:Bounds x="1080" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AssetThreshold_di" bpmnElement="Gateway_AssetThreshold" isMarkerVisible="true">
+        <dc:Bounds x="1255" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1315" y="283" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyManager_di" bpmnElement="Task_NotifyManager">
+        <dc:Bounds x="1370" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManagerApproval_di" bpmnElement="Task_ManagerApproval">
+        <dc:Bounds x="1540" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ManagerDecision_di" bpmnElement="Gateway_ManagerDecision" isMarkerVisible="true">
+        <dc:Bounds x="1715" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1714" y="85" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogRejection_di" bpmnElement="Task_LogRejection">
+        <dc:Bounds x="1690" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OpenAccount_di" bpmnElement="Task_OpenAccount">
+        <dc:Bounds x="1430" y="410" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogAccountCreation_di" bpmnElement="Task_LogAccountCreation">
+        <dc:Bounds x="1900" y="410" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendSMSConfirmation_di" bpmnElement="Task_SendSMSConfirmation">
+        <dc:Bounds x="2050" y="410" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendWelcomeEmail_di" bpmnElement="Task_SendWelcomeEmail">
+        <dc:Bounds x="2200" y="410" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Success_di" bpmnElement="EndEvent_Success">
+        <dc:Bounds x="2382" y="432" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2360" y="475" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HandleAccountError_di" bpmnElement="Task_HandleAccountError">
+        <dc:Bounds x="1430" y="642" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyErrorToSupport_di" bpmnElement="Task_NotifyErrorToSupport">
+        <dc:Bounds x="1580" y="642" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Error_di" bpmnElement="EndEvent_Error">
+        <dc:Bounds x="1732" y="664" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1707" y="707" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LogSMSError_di" bpmnElement="Task_LogSMSError">
+        <dc:Bounds x="1900" y="580" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_SMSError_di" bpmnElement="Event_SMSError">
+        <dc:Bounds x="2082" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2112" y="503" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_AccountCreationError_di" bpmnElement="Event_AccountCreationError">
+        <dc:Bounds x="1462" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1378" y="503" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="198" y="290" />
+        <di:waypoint x="270" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="370" y="290" />
+        <di:waypoint x="440" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3">
+        <di:waypoint x="540" y="290" />
+        <di:waypoint x="610" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="710" y="290" />
+        <di:waypoint x="780" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="880" y="290" />
+        <di:waypoint x="955" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DataComplete_di" bpmnElement="Flow_DataComplete">
+        <di:waypoint x="1005" y="290" />
+        <di:waypoint x="1080" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1010" y="272" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DataIncomplete_di" bpmnElement="Flow_DataIncomplete">
+        <di:waypoint x="980" y="315" />
+        <di:waypoint x="980" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="979" y="384" width="83" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_BackToCustomer_di" bpmnElement="Flow_BackToCustomer">
+        <di:waypoint x="930" y="550" />
+        <di:waypoint x="320" y="550" />
+        <di:waypoint x="320" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="1180" y="290" />
+        <di:waypoint x="1255" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HighValueAccount_di" bpmnElement="Flow_HighValueAccount">
+        <di:waypoint x="1280" y="265" />
+        <di:waypoint x="1280" y="140" />
+        <di:waypoint x="1370" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1288" y="193" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StandardAccount_di" bpmnElement="Flow_StandardAccount">
+        <di:waypoint x="1280" y="315" />
+        <di:waypoint x="1280" y="450" />
+        <di:waypoint x="1430" y="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="393" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="1470" y="140" />
+        <di:waypoint x="1540" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="1640" y="140" />
+        <di:waypoint x="1715" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerApprove_di" bpmnElement="Flow_ManagerApprove">
+        <di:waypoint x="1765" y="140" />
+        <di:waypoint x="1850" y="140" />
+        <di:waypoint x="1850" y="360" />
+        <di:waypoint x="1530" y="438" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1773" y="122" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerReject_di" bpmnElement="Flow_ManagerReject">
+        <di:waypoint x="1740" y="165" />
+        <di:waypoint x="1740" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1748" y="195" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AfterRejection_di" bpmnElement="Flow_AfterRejection">
+        <di:waypoint x="1690" y="277" />
+        <di:waypoint x="980" y="370" />
+        <di:waypoint x="980" y="510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1530" y="450" />
+        <di:waypoint x="1900" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="2000" y="450" />
+        <di:waypoint x="2050" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="2150" y="450" />
+        <di:waypoint x="2200" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="2300" y="450" />
+        <di:waypoint x="2382" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AccountError_di" bpmnElement="Flow_AccountError">
+        <di:waypoint x="1480" y="508" />
+        <di:waypoint x="1480" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ErrorToEnd_di" bpmnElement="Flow_ErrorToEnd">
+        <di:waypoint x="1530" y="682" />
+        <di:waypoint x="1580" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToErrorEnd_di" bpmnElement="Flow_ToErrorEnd">
+        <di:waypoint x="1680" y="682" />
+        <di:waypoint x="1732" y="682" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SMSError_di" bpmnElement="Flow_SMSError">
+        <di:waypoint x="2100" y="508" />
+        <di:waypoint x="2100" y="540" />
+        <di:waypoint x="2000" y="593" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SMSErrorContinue_di" bpmnElement="Flow_SMSErrorContinue">
+        <di:waypoint x="2000" y="620" />
+        <di:waypoint x="2250" y="620" />
+        <di:waypoint x="2250" y="490" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_1bcxf9d" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn">
+  <bpmn:process id="Process_1k7woqc" name="processewewe" isExecutable="true" camunda:historyTimeToLive="1">
+    <bpmn:extensionElements>
+      <camunda:properties>
+        <camunda:property name="applicationId" value="wqwqeqe" />
+        <camunda:property />
+      </camunda:properties>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="StartEvent_1" name="start" camunda:asyncBefore="true" camunda:asyncAfter="true">
+      <bpmn:outgoing>Flow_14sx1ep</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_14sx1ep" sourceRef="StartEvent_1" targetRef="Activity_1wt5y6k" />
+    <bpmn:endEvent id="Event_108kr0a" name="end">
+      <bpmn:incoming>Flow_0k4o0hl</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0ln5437" sourceRef="Activity_1wt5y6k" targetRef="Activity_1xt02pa" />
+    <bpmn:sequenceFlow id="Flow_0k4o0hl" sourceRef="Activity_1xt02pa" targetRef="Event_108kr0a" />
+    <bpmn:scriptTask id="Activity_1wt5y6k" name="js script" camunda:asyncBefore="true" camunda:asyncAfter="true" scriptFormat="js">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="applicationId" value="123456" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_14sx1ep</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ln5437</bpmn:outgoing>
+      <bpmn:script>function helloWorld() {
+    return 'Hello World from Javascript'
+}
+
+helloWorld()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_1xt02pa" name="groovy script" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0ln5437</bpmn:incoming>
+      <bpmn:outgoing>Flow_0k4o0hl</bpmn:outgoing>
+      <bpmn:script>return 'Hello World from Groovy'</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1k7woqc">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="186" y="142" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_108kr0a_di" bpmnElement="Event_108kr0a">
+        <dc:Bounds x="582" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="591" y="142" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0sgro52_di" bpmnElement="Activity_1wt5y6k">
+        <dc:Bounds x="260" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1k57k9s_di" bpmnElement="Activity_1xt02pa">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_14sx1ep_di" bpmnElement="Flow_14sx1ep">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="260" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ln5437_di" bpmnElement="Flow_0ln5437">
+        <di:waypoint x="360" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k4o0hl_di" bpmnElement="Flow_0k4o0hl">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="582" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

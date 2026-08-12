@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_InsuranceClaim" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="Insurance_Claim_Process" name="Insurance Claim Process" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="StartEvent_ClaimReceived" name="Start">
+      <bpmn:outgoing>Flow_Start_To_Receive</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Task_ReceiveClaim" name="Receive Claim" scriptFormat="groovy">
+      <bpmn:incoming>Flow_Start_To_Receive</bpmn:incoming>
+      <bpmn:incoming>Flow_RequestInfo_To_CompleteCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_Receive_To_Validate</bpmn:outgoing>
+      <bpmn:script>
+if (execution.getVariable("claimComplete") == null) {
+  execution.setVariable("claimComplete", false)
+}
+if (execution.getVariable("approvedClaim") == null) {
+  execution.setVariable("approvedClaim", false)
+}
+if (execution.getVariable("claimStatus") == null) {
+  execution.setVariable("claimStatus", "RECEIVED")
+}
+if (execution.getVariable("claimAmount") == null) {
+  execution.setVariable("claimAmount", 0)
+}
+if (execution.getVariable("approvalThreshold") == null) {
+  execution.setVariable("approvalThreshold", 10000)
+}
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Task_ValidateClaim" name="Validate Claim" camunda:asyncAfter="true" camunda:delegateExpression="${claimValidationDelegate}">
+      <bpmn:incoming>Flow_Receive_To_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validate_To_CompleteCheck</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_IsClaimComplete" name="Is claim complete?" default="Flow_CompleteNo_To_RequestInfo">
+      <bpmn:incoming>Flow_Validate_To_CompleteCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_CompleteYes_To_Evaluate</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CompleteNo_To_RequestInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_RequestAdditionalInformation" name="Request Additional Information">
+      <bpmn:incoming>Flow_CompleteNo_To_RequestInfo</bpmn:incoming>
+      <bpmn:outgoing>Flow_RequestInfo_To_CompleteCheck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EvaluateClaim" name="Evaluate Claim">
+      <bpmn:incoming>Flow_CompleteYes_To_Evaluate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Evaluate_To_HighValueCheck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_IsHighValueClaim" name="Claim over threshold?" default="Flow_HighValueNo_To_ApprovalCheck">
+      <bpmn:incoming>Flow_Evaluate_To_HighValueCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_HighValueYes_To_ManagerApproval</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HighValueNo_To_ApprovalCheck</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="CallActivity_ManagerApproval" name="Manager Approval" calledElement="ManagerApprovalProcess">
+      <bpmn:extensionElements>
+        <camunda:in source="claimAmount" target="claimAmount" />
+        <camunda:out source="reviewResult" target="reviewResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HighValueYes_To_ManagerApproval</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerApproval_To_ApprovalCheck</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="CallActivity_StandardApproval" name="Standard Approval" calledElement="StandardApprovalProcess">
+      <bpmn:extensionElements>
+        <camunda:in source="claimAmount" target="claimAmount" />
+        <camunda:out source="reviewResult" target="reviewResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_HighValueNo_To_ApprovalCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_StandardApproval_To_ApprovalCheck</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Gateway_IsClaimApproved" name="Approve claim?">
+      <bpmn:incoming>Flow_StandardApproval_To_ApprovalCheck</bpmn:incoming>
+      <bpmn:incoming>Flow_ManagerApproval_To_ApprovalCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovedYes_To_Payment</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ApprovedNo_To_Rejection</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_NotifyRejection" name="Notify Rejection">
+      <bpmn:incoming>Flow_ApprovedNo_To_Rejection</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rejection_To_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_ProcessPayment" name="Process Payment">
+      <bpmn:incoming>Flow_ApprovedYes_To_Payment</bpmn:incoming>
+      <bpmn:outgoing>Flow_Payment_To_End</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_ClaimRejected" name="Claim Rejected">
+      <bpmn:incoming>Flow_Rejection_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_ClaimCompleted" name="Claim Completed">
+      <bpmn:incoming>Flow_Payment_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Start_To_Receive" sourceRef="StartEvent_ClaimReceived" targetRef="Task_ReceiveClaim" />
+    <bpmn:sequenceFlow id="Flow_Receive_To_Validate" sourceRef="Task_ReceiveClaim" targetRef="Task_ValidateClaim" />
+    <bpmn:sequenceFlow id="Flow_Validate_To_CompleteCheck" sourceRef="Task_ValidateClaim" targetRef="Gateway_IsClaimComplete" />
+    <bpmn:sequenceFlow id="Flow_CompleteNo_To_RequestInfo" sourceRef="Gateway_IsClaimComplete" targetRef="Task_RequestAdditionalInformation" />
+    <bpmn:sequenceFlow id="Flow_RequestInfo_To_CompleteCheck" sourceRef="Task_RequestAdditionalInformation" targetRef="Task_ReceiveClaim" />
+    <bpmn:sequenceFlow id="Flow_CompleteYes_To_Evaluate" sourceRef="Gateway_IsClaimComplete" targetRef="Task_EvaluateClaim">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${claimComplete}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Evaluate_To_HighValueCheck" sourceRef="Task_EvaluateClaim" targetRef="Gateway_IsHighValueClaim" />
+    <bpmn:sequenceFlow id="Flow_HighValueYes_To_ManagerApproval" sourceRef="Gateway_IsHighValueClaim" targetRef="CallActivity_ManagerApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${claimAmount &gt; approvalThreshold}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_HighValueNo_To_ApprovalCheck" sourceRef="Gateway_IsHighValueClaim" targetRef="CallActivity_StandardApproval" />
+    <bpmn:sequenceFlow id="Flow_ManagerApproval_To_ApprovalCheck" sourceRef="CallActivity_ManagerApproval" targetRef="Gateway_IsClaimApproved" />
+    <bpmn:sequenceFlow id="Flow_StandardApproval_To_ApprovalCheck" sourceRef="CallActivity_StandardApproval" targetRef="Gateway_IsClaimApproved" />
+    <bpmn:sequenceFlow id="Flow_ApprovedYes_To_Payment" sourceRef="Gateway_IsClaimApproved" targetRef="Task_ProcessPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewResult == 'approved' || reviewResult == 'manager_approved'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ApprovedNo_To_Rejection" sourceRef="Gateway_IsClaimApproved" targetRef="Task_NotifyRejection">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewResult == 'rejected'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Rejection_To_End" sourceRef="Task_NotifyRejection" targetRef="EndEvent_ClaimRejected" />
+    <bpmn:sequenceFlow id="Flow_Payment_To_End" sourceRef="Task_ProcessPayment" targetRef="EndEvent_ClaimCompleted" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_InsuranceClaim">
+    <bpmndi:BPMNPlane id="BPMNPlane_InsuranceClaim" bpmnElement="Insurance_Claim_Process">
+      <bpmndi:BPMNShape id="StartEvent_ClaimReceived_di" bpmnElement="StartEvent_ClaimReceived">
+        <dc:Bounds x="152" y="262" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="298" width="24" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReceiveClaim_di" bpmnElement="Task_ReceiveClaim">
+        <dc:Bounds x="235" y="240" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ValidateClaim_di" bpmnElement="Task_ValidateClaim">
+        <dc:Bounds x="430" y="240" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_IsClaimComplete_di" bpmnElement="Gateway_IsClaimComplete" isMarkerVisible="true">
+        <dc:Bounds x="605" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="606" y="308" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestAdditionalInformation_di" bpmnElement="Task_RequestAdditionalInformation">
+        <dc:Bounds x="420" y="80" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EvaluateClaim_di" bpmnElement="Task_EvaluateClaim">
+        <dc:Bounds x="735" y="240" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_IsHighValueClaim_di" bpmnElement="Gateway_IsHighValueClaim" isMarkerVisible="true">
+        <dc:Bounds x="885" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="944.5" y="266" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyRejection_di" bpmnElement="Task_NotifyRejection">
+        <dc:Bounds x="1405" y="50" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ProcessPayment_di" bpmnElement="Task_ProcessPayment">
+        <dc:Bounds x="1405" y="240" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ClaimRejected_di" bpmnElement="EndEvent_ClaimRejected">
+        <dc:Bounds x="1712" y="72" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1693" y="108" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ClaimCompleted_di" bpmnElement="EndEvent_ClaimCompleted">
+        <dc:Bounds x="1712" y="262" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1688" y="298" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_ManagerApproval_di" bpmnElement="CallActivity_ManagerApproval">
+        <dc:Bounds x="1010" y="120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_StandardApproval_di" bpmnElement="CallActivity_StandardApproval">
+        <dc:Bounds x="1000" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_IsClaimApproved_di" bpmnElement="Gateway_IsClaimApproved" isMarkerVisible="true">
+        <dc:Bounds x="1285" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1272" y="315" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_To_Receive_di" bpmnElement="Flow_Start_To_Receive">
+        <di:waypoint x="188" y="280" />
+        <di:waypoint x="235" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Receive_To_Validate_di" bpmnElement="Flow_Receive_To_Validate">
+        <di:waypoint x="345" y="280" />
+        <di:waypoint x="430" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validate_To_CompleteCheck_di" bpmnElement="Flow_Validate_To_CompleteCheck">
+        <di:waypoint x="540" y="280" />
+        <di:waypoint x="605" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CompleteNo_To_RequestInfo_di" bpmnElement="Flow_CompleteNo_To_RequestInfo">
+        <di:waypoint x="630" y="255" />
+        <di:waypoint x="630" y="120" />
+        <di:waypoint x="550" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RequestInfo_To_CompleteCheck_di" bpmnElement="Flow_RequestInfo_To_CompleteCheck">
+        <di:waypoint x="420" y="120" />
+        <di:waypoint x="290" y="120" />
+        <di:waypoint x="290" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CompleteYes_To_Evaluate_di" bpmnElement="Flow_CompleteYes_To_Evaluate">
+        <di:waypoint x="655" y="280" />
+        <di:waypoint x="735" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Evaluate_To_HighValueCheck_di" bpmnElement="Flow_Evaluate_To_HighValueCheck">
+        <di:waypoint x="845" y="280" />
+        <di:waypoint x="885" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HighValueYes_To_ManagerApproval_di" bpmnElement="Flow_HighValueYes_To_ManagerApproval">
+        <di:waypoint x="910" y="255" />
+        <di:waypoint x="910" y="160" />
+        <di:waypoint x="1010" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HighValueNo_To_ApprovalCheck_di" bpmnElement="Flow_HighValueNo_To_ApprovalCheck">
+        <di:waypoint x="910" y="305" />
+        <di:waypoint x="910" y="400" />
+        <di:waypoint x="1000" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerApproval_To_ApprovalCheck_di" bpmnElement="Flow_ManagerApproval_To_ApprovalCheck">
+        <di:waypoint x="1130" y="160" />
+        <di:waypoint x="1180" y="160" />
+        <di:waypoint x="1180" y="280" />
+        <di:waypoint x="1285" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StandardApproval_To_ApprovalCheck_di" bpmnElement="Flow_StandardApproval_To_ApprovalCheck">
+        <di:waypoint x="1120" y="400" />
+        <di:waypoint x="1180" y="400" />
+        <di:waypoint x="1180" y="280" />
+        <di:waypoint x="1285" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ApprovedYes_To_Payment_di" bpmnElement="Flow_ApprovedYes_To_Payment">
+        <di:waypoint x="1335" y="280" />
+        <di:waypoint x="1405" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ApprovedNo_To_Rejection_di" bpmnElement="Flow_ApprovedNo_To_Rejection">
+        <di:waypoint x="1310" y="255" />
+        <di:waypoint x="1310" y="90" />
+        <di:waypoint x="1405" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Rejection_To_End_di" bpmnElement="Flow_Rejection_To_End">
+        <di:waypoint x="1515" y="90" />
+        <di:waypoint x="1712" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Payment_To_End_di" bpmnElement="Flow_Payment_To_End">
+        <di:waypoint x="1515" y="280" />
+        <di:waypoint x="1712" y="280" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

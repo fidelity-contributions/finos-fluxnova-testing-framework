@@ -1,0 +1,1 @@
+throw new org.finos.fluxnova.bpm.engine.delegate.BpmnError("Error", "Script Error")

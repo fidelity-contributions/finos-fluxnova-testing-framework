@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" id="Definitions_1cdgjsy" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.1.1" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="1.0.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn">
+  <bpmn:process id="Process_19m1ds6" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="StartEvent_1" name="Start_event">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"End event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1fgb89l</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Activity_0q12s9o" name="Service_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">"Service task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="groovy">"Service task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1fgb89l</bpmn:incoming>
+      <bpmn:outgoing>Flow_0oqxxit</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1fgb89l" sourceRef="StartEvent_1" targetRef="Activity_0q12s9o" />
+    <bpmn:sendTask id="Activity_05iyyva" name="Send_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Send task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Send task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0oqxxit</bpmn:incoming>
+      <bpmn:outgoing>Flow_0g9bvgt</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:sequenceFlow id="Flow_0oqxxit" sourceRef="Activity_0q12s9o" targetRef="Activity_05iyyva" />
+    <bpmn:receiveTask id="Activity_1qhunr3" name="Receive_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Receive task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Receive task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0g9bvgt</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ejj9gg</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:sequenceFlow id="Flow_0g9bvgt" sourceRef="Activity_05iyyva" targetRef="Activity_1qhunr3" />
+    <bpmn:manualTask id="Activity_1b90hmz" name="Manual_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="groovy">"Manual task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="groovy">"Manual task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ejj9gg</bpmn:incoming>
+      <bpmn:outgoing>Flow_0qndb2p</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0ejj9gg" sourceRef="Activity_1qhunr3" targetRef="Activity_1b90hmz" />
+    <bpmn:businessRuleTask id="Activity_0fqx0ij" name="Business_rule_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Business rule task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Business rule task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0qndb2p</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zq59ng</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="Flow_0qndb2p" sourceRef="Activity_1b90hmz" targetRef="Activity_0fqx0ij" />
+    <bpmn:scriptTask id="Activity_1pwfz5a" name="Script_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Script task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Script task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0zq59ng</bpmn:incoming>
+      <bpmn:outgoing>Flow_1dva0yp</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0zq59ng" sourceRef="Activity_0fqx0ij" targetRef="Activity_1pwfz5a" />
+    <bpmn:callActivity id="Activity_08jr4i9" name="Call_activity">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Call activity start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Call activity end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1dva0yp</bpmn:incoming>
+      <bpmn:outgoing>Flow_1btlpgm</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_1dva0yp" sourceRef="Activity_1pwfz5a" targetRef="Activity_08jr4i9" />
+    <bpmn:subProcess id="Activity_0hfstwy" name="Sub_process">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Sub process start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"Sub process end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1btlpgm</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wbulvd</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_1btlpgm" sourceRef="Activity_08jr4i9" targetRef="Activity_0hfstwy" />
+    <bpmn:userTask id="Activity_1ih12hv" name="User_task">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"User task start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"User task end event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wbulvd</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ugwnlw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0wbulvd" sourceRef="Activity_0hfstwy" targetRef="Activity_1ih12hv" />
+    <bpmn:endEvent id="Event_1sw7cmm" name="End_event">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="start">
+          <camunda:script scriptFormat="js">"Start event"</camunda:script>
+        </camunda:executionListener>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="js">"End event"</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1e5zagk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Activity_10mctyn" name="Script_task_without_execution_listener" scriptFormat="js">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1ugwnlw</bpmn:incoming>
+      <bpmn:outgoing>Flow_1e5zagk</bpmn:outgoing>
+      <bpmn:script>"No execution listener"</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1ugwnlw" sourceRef="Activity_1ih12hv" targetRef="Activity_10mctyn" />
+    <bpmn:sequenceFlow id="Flow_1e5zagk" sourceRef="Activity_10mctyn" targetRef="Event_1sw7cmm" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_19m1ds6">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="169" y="142" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0q12s9o_di" bpmnElement="Activity_0q12s9o">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05iyyva_di" bpmnElement="Activity_05iyyva">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1qhunr3_di" bpmnElement="Activity_1qhunr3">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1b90hmz_di" bpmnElement="Activity_1b90hmz">
+        <dc:Bounds x="740" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fqx0ij_di" bpmnElement="Activity_0fqx0ij">
+        <dc:Bounds x="890" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1pwfz5a_di" bpmnElement="Activity_1pwfz5a">
+        <dc:Bounds x="1040" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08jr4i9_di" bpmnElement="Activity_08jr4i9">
+        <dc:Bounds x="1190" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1sw7cmm_di" bpmnElement="Event_1sw7cmm">
+        <dc:Bounds x="1802" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1794" y="142" width="53" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10mctyn_di" bpmnElement="Activity_10mctyn">
+        <dc:Bounds x="1640" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hfstwy_di" bpmnElement="Activity_0hfstwy">
+        <dc:Bounds x="1340" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ih12hv_di" bpmnElement="Activity_1ih12hv">
+        <dc:Bounds x="1490" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1fgb89l_di" bpmnElement="Flow_1fgb89l">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0oqxxit_di" bpmnElement="Flow_0oqxxit">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0g9bvgt_di" bpmnElement="Flow_0g9bvgt">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ejj9gg_di" bpmnElement="Flow_0ejj9gg">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="740" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0qndb2p_di" bpmnElement="Flow_0qndb2p">
+        <di:waypoint x="840" y="117" />
+        <di:waypoint x="890" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zq59ng_di" bpmnElement="Flow_0zq59ng">
+        <di:waypoint x="990" y="117" />
+        <di:waypoint x="1040" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dva0yp_di" bpmnElement="Flow_1dva0yp">
+        <di:waypoint x="1140" y="117" />
+        <di:waypoint x="1190" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1btlpgm_di" bpmnElement="Flow_1btlpgm">
+        <di:waypoint x="1290" y="117" />
+        <di:waypoint x="1340" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wbulvd_di" bpmnElement="Flow_0wbulvd">
+        <di:waypoint x="1440" y="117" />
+        <di:waypoint x="1490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ugwnlw_di" bpmnElement="Flow_1ugwnlw">
+        <di:waypoint x="1590" y="117" />
+        <di:waypoint x="1640" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1e5zagk_di" bpmnElement="Flow_1e5zagk">
+        <di:waypoint x="1740" y="117" />
+        <di:waypoint x="1802" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_04cy89k">
+    <bpmndi:BPMNPlane id="BPMNPlane_05jdeku" bpmnElement="Activity_0hfstwy" />
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

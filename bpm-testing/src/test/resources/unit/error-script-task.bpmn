@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://fluxnova.finos.org/schema/modeler/1.0" xmlns:fluxnova="http://fluxnova.finos.org/schema/1.0/bpmn" id="Definitions_1gv21q3" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Fluxnova Modeler" exporterVersion="1.2.0" modeler:executionPlatform="Fluxnova Platform" modeler:executionPlatformVersion="2.0.0">
+  <bpmn:process id="Process_04oz2gp" isExecutable="true">
+    <bpmn:startEvent id="Event_1b76c8w" name="start" camunda:asyncBefore="true" camunda:asyncAfter="true">
+      <bpmn:outgoing>Flow_14sx1ep</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_108kr0a" name="end">
+      <bpmn:incoming>Flow_0k4o0hl</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="error_js" name="js script" camunda:asyncBefore="true" camunda:asyncAfter="true" scriptFormat="js">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="applicationId" value="123456" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_14sx1ep</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ln5437</bpmn:outgoing>
+      <bpmn:script>var first=1
+var second=2
+var third=3
+
+throw new org.finos.fluxnova.bpm.engine.delegate.BpmnError("This is an error");
+
+var fourth=4</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="error_groovy" name="groovy script" scriptFormat="groovy">
+      <bpmn:incoming>Flow_0ln5437</bpmn:incoming>
+      <bpmn:outgoing>Flow_0k4o0hl</bpmn:outgoing>
+      <bpmn:script>def first=1
+def second=2
+def third=3
+
+throw new org.finos.fluxnova.bpm.engine.delegate.BpmnError("This is an error");
+
+def fourth=4
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_14sx1ep" sourceRef="Event_1b76c8w" targetRef="error_js" />
+    <bpmn:sequenceFlow id="Flow_0k4o0hl" sourceRef="error_groovy" targetRef="Event_108kr0a" />
+    <bpmn:sequenceFlow id="Flow_0ln5437" sourceRef="error_js" targetRef="error_groovy" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_04oz2gp">
+      <bpmndi:BPMNShape id="BPMNShape_0rvldqm" bpmnElement="Event_1b76c8w">
+        <dc:Bounds x="192" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="199" y="145" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_108kr0a_di" bpmnElement="Event_108kr0a">
+        <dc:Bounds x="595" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="604" y="145" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0sgro52_di" bpmnElement="error_js">
+        <dc:Bounds x="273" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1k57k9s_di" bpmnElement="error_groovy">
+        <dc:Bounds x="433" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_14sx1ep_di" bpmnElement="Flow_14sx1ep">
+        <di:waypoint x="228" y="120" />
+        <di:waypoint x="273" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k4o0hl_di" bpmnElement="Flow_0k4o0hl">
+        <di:waypoint x="533" y="120" />
+        <di:waypoint x="595" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ln5437_di" bpmnElement="Flow_0ln5437">
+        <di:waypoint x="373" y="120" />
+        <di:waypoint x="433" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
