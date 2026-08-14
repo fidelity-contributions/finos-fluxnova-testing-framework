@@ -1,1 +1,13 @@
 name: Main Branch Release to Maven Central
+on:
+  push:
+    branches:
+      - "release/*"
+      - "hotfix/*"
+
+jobs:
+  release:
+    uses: ./.github/workflows/build-test-deploy.yml
+    with:
+      deploy-target: central
+    secrets: inherit
