@@ -1,12 +1,34 @@
-name: Main Branch Release to Maven Central
+# Workflow: Release and publish artifacts to Maven Central
+# Purpose: Builds, signs, and publishes Maven artifacts to Sonatype OSSRH, then tags the released version.
+# Prerequisites: pom.xml must be on a *-SNAPSHOT version; We need to change logic for non-SNAPSHOT versions.
+# Notes:
+#   - release/* branches: major version increment (e.g., 1.2.3-SNAPSHOT to 2.0.0-SNAPSHOT)
+#   - hotfix/* branches: minor version increment (e.g., 1.2.3-SNAPSHOT to 1.3.0-SNAPSHOT)
+# Adjust version computation logic if patch releases are desired instead of minor bumps (e.g., 1.2.3-SNAPSHOT to 1.3.0-SNAPSHOT).
+
+name: "Main Branch Release to Maven Central"
+
+env:
+  CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
+  CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
+  CI_GPG_PASSPHRASE: ${{ secrets.CI_GPG_PASSPHRASE }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  DOCKER_USERNAME: finos
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
 on:
+  workflow_dispatch:
   push:
     branches:
-      - "release/*"
-      - "hotfix/*"
+      - 'release/*'
+      - 'hotfix/*'
+
+permissions:
+  contents: write
 
 jobs:
-  release:
+  publish-central:
+    name: Publish to Maven Central
     uses: ./.github/workflows/build-test-deploy.yml
     with:
       deploy-target: central

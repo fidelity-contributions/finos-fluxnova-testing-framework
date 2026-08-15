@@ -31,7 +31,7 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test
+    name: Build
     runs-on: ubuntu-latest
     outputs:
       image_version: ${{ steps.version.outputs.image_version }}
@@ -48,58 +48,111 @@ jobs:
       - name: Download deps and plugins
         run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies -s ./settings.xml
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - name: Collect Workflow Telemetry
+        uses: catchpoint/workflow-telemetry-action@94c3c3d9567a0205de6da68a76c428ce4e769af1
         with:
-          node-version: '20'
-          cache: 'npm'
+          theme: dark
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build
+        uses: ./.github/actions/build-deploy
+        with:
+          branch: ${{ github.ref_name }}
 
-      - name: Set Maven version
+      - name: Compute image version
+        id: version
+        shell: bash
         run: |
-          # Extract base version from pom.xml
-          POM_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
-          
-          # Determine version suffix based on branch
-          if [[ "${{ github.ref_name }}" == main* ]]; then
-            ARTIFACT_VERSION="${POM_VERSION}-b${{ github.run_number }}"
-          elif [[ "${{ github.ref_name }}" == release* ]]; then
-            ARTIFACT_VERSION="${POM_VERSION}-rc${{ github.run_number }}"
-          else
-            ARTIFACT_VERSION="${POM_VERSION}-SNAPSHOT"
-          fi
-          echo "Setting version to: ${ARTIFACT_VERSION}"
-          mvn versions:set -DnewVersion=${ARTIFACT_VERSION}
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          echo "image_version=${{ github.run_number }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
 
-      - name: Build with Maven
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Java setup
+        uses: ./.github/actions/java-setup
+
+      - name: Unit Tests
+        uses: ./.github/actions/unit-test
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: |
+            **/target/site/jacoco/jacoco.xml
+            **/target/jacoco.exec
+          if-no-files-found: warn
+
+  integration-test:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Java setup
+        uses: ./.github/actions/java-setup
+
+      - name: Build internal artifacts
+        run: mvn -B -e -U clean install -DskipTests=true -DskipITs=true
+
+      - name: Integration Tests
+        uses: ./.github/actions/integration-test
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-coverage
+          path: |
+            **/target/site/jacoco*/jacoco.xml
+            **/target/jacoco*.exec
+          if-no-files-found: warn
+
+  coverage-aggregate:
+    name: Aggregate Coverage
+    runs-on: ubuntu-latest
+    needs: [unit-test, integration-test]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Java setup
+        uses: ./.github/actions/java-setup
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+
+      - name: Download integration test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-test-coverage
+        continue-on-error: true
+
+      - name: Generate aggregate coverage report
+        shell: bash
         run: |
-          mvn -B clean test verify \
-            -DskipCoverage=false
-        env:
-          MAVEN_OPTS: "-Xmx1024m"
+          set -euo pipefail
+          mvn -B -e verify "-Pcoverage-aggregate,distro,distro-ce,distro-tomcat,distro-wildfly,distro-webjar,distro-run" -DskipTests -DskipITs
 
-      - name: Deploy to GitHub Packages
-        if: inputs.deploy-target == 'github'
-        run: |
-          mvn -B deploy -DaltDeploymentRepository=ossrh::https://maven.pkg.github.com/${{ github.repository }} \ 
-            -DskipTests=true -s ./settings.xml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload aggregate coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: aggregate-coverage
+          path: coverage/target/site/jacoco-aggregate/jacoco.xml
+          if-no-files-found: error
 
-      - name: Deploy to Maven Central
-        if: inputs.deploy-target == 'central'
-        run:
-          mvn -B -U deploy -DskipTests=true -s ./settings.xml
-        env:
-          CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
-          CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
-          CI_GPG_PASSPHRASE: ${{ secrets.CI_GPG_PASSPHRASE }}
   sonar:
     name: Sonar Scan (Report Only)
     runs-on: ubuntu-latest
-    needs: [ build ]
+    needs: [coverage-aggregate]
     if: ${{ vars.SONAR_ENABLED == 'true' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') }}
     steps:
       - name: Checkout repo
