@@ -102,6 +102,9 @@
         <artifactId>central-publishing-maven-plugin</artifactId>
         <configuration>
           <deploymentName>fluxnova-bpm-testing-framework-${project.version}</deploymentName>
+          <publishingServerId>${publish.server.id}</publishingServerId>
+          <!-- TODO: its set to false to manually validate the artifacts before publishing, set it to true once successfully tested with all dependent projects-->
+          <autoPublish>false</autoPublish>
         </configuration>
       </plugin>
       <plugin>
