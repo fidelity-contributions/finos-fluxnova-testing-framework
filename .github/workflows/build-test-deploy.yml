@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - main
+      - develop
+      - feature/*
   pull_request:
   workflow_dispatch:
 
@@ -29,6 +31,8 @@ jobs:
   build:
     name: Build & Test
     runs-on: ubuntu-latest
+    with:
+      deploy-target: github
     outputs:
       image_version: ${{ steps.version.outputs.image_version }}
     steps:
