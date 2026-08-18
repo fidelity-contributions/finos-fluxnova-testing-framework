@@ -4,6 +4,7 @@ env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
   CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
   CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
+  CI_GPG_PASSPHRASE: ${{ secrets.CI_GPG_PASSPHRASE }}
 
 on:
   push:
@@ -56,26 +57,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build with Maven
-        run: |
-          mvn -B clean test verify \
-            -DskipCoverage=false
-        env:
-          MAVEN_OPTS: "-Xmx1024m"
-
-      - name: Deploy to GitHub Packages
-        if: inputs.deploy-target == 'github'
-        run: |
-          mvn -B deploy -DaltDeploymentRepository=ossrh::https://maven.pkg.github.com/${{ github.repository }} \ 
-            -DskipTests=true -s ./settings.xml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to Maven Central
-        if: inputs.deploy-target == 'central'
-        run:
-          mvn -B -U deploy -DskipTests=true -s ./settings.xml
-        env:
-          CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
-          CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
-          CI_GPG_PASSPHRASE: ${{ secrets.CI_GPG_PASSPHRASE }}
+      - name: Build & Deploy
+        uses: ./.github/actions/build-deploy
+        with:
+          branch: ${{ github.ref_name }}
