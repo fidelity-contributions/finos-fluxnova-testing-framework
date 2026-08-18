@@ -1,4 +1,4 @@
-name: "Build CI"
+name: "Build Testing framework and Deploy"
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
