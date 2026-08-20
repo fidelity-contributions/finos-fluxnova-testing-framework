@@ -1,1 +1,140 @@
-name: Main Branch Release to Maven Central
+# Workflow: Release and publish artifacts to Maven Central
+# Purpose: Builds, signs, and publishes Maven artifacts to Sonatype Central Portal, then tags the released version.
+# Prerequisites: pom.xml must be on a *-SNAPSHOT version.
+# Notes:
+#   - release/* branches: major version increment (e.g., 1.0.0-SNAPSHOT → 1.0.0 release, then 2.0.0-SNAPSHOT)
+#   - hotfix/* branches: minor version increment (e.g., 1.0.0-SNAPSHOT → 1.0.0 release, then 1.1.0-SNAPSHOT)
+
+name: "Release and publish artifacts to Maven Central"
+
+env:
+  CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
+  CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
+  CI_GPG_PASSPHRASE: ${{ secrets.CI_GPG_PASSPHRASE }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'release/*'
+      - 'hotfix/*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-central:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.set-vars.outputs.release_version }}
+      tag: ${{ steps.set-vars.outputs.tag }}
+      minor_version: ${{ steps.set-vars.outputs.minor_version }}
+    steps:
+      - name: Validate branch for workflow_dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          if [[ "$BRANCH_NAME" != release/* && "$BRANCH_NAME" != hotfix/* ]]; then
+            echo "ERROR: workflow_dispatch must be run from a release/* or hotfix/* branch. Current branch: $BRANCH_NAME"
+            exit 1
+          fi
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          server-id: ossrh
+          server-username: CI_DEPLOY_USERNAME
+          server-password: CI_DEPLOY_PASSWORD
+          gpg-private-key: ${{ secrets.CI_GPG_PRIVATE_KEY }}
+          gpg-passphrase: CI_GPG_PASSPHRASE
+
+      - name: Configure git
+        uses: ./.github/actions/configure-git
+
+      - name: Download deps and plugins
+        run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies -s ./settings.xml
+
+      - name: Extract version from pom.xml and compute next development version
+        id: set-vars
+        run: |
+          # Extract current version from pom.xml
+          currentVersion=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+          # Remove -SNAPSHOT if present to get the release version
+          releaseVersion=${currentVersion%-SNAPSHOT}
+
+          # Set as environment variable and job output
+          echo "RELEASE_VERSION=${releaseVersion}" >> $GITHUB_ENV
+          echo "release_version=${releaseVersion}" >> $GITHUB_OUTPUT
+
+          # Set tag name
+          TAG="v${releaseVersion}"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+          # Extract branch name
+          BRANCH_NAME="${{ github.ref_name }}"
+          echo "Branch name: $BRANCH_NAME"
+
+          # Extract numeric components for computing next development version
+          n=${releaseVersion//[!0-9]/ }
+          a=(${n//\./ })
+
+          # Determine version increment based on branch name
+          if [[ "$BRANCH_NAME" == release/* ]]; then
+            nextMajor=$((${a[0]} + 1))
+            developmentVersion="${nextMajor}.0.0-SNAPSHOT"
+            echo "Branch type: Release - Incrementing major version: ${releaseVersion} → ${developmentVersion}"
+          elif [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            currentMajor=${a[0]}
+            nextMinor=$((${a[1]} + 1))
+            developmentVersion="${currentMajor}.${nextMinor}.0-SNAPSHOT"
+            echo "Branch type: Hotfix - Incrementing minor version: ${releaseVersion} → ${developmentVersion}"
+          else
+            echo "ERROR: Unsupported branch pattern: $BRANCH_NAME"
+            exit 1
+          fi
+
+          echo "DEVELOPMENT_VERSION=${developmentVersion}" >> $GITHUB_ENV
+
+          minorVersion="${a[0]}.${a[1]}"
+          echo "minor_version=${minorVersion}" >> $GITHUB_OUTPUT
+
+      - name: Configure GitHub authentication for Maven Release Plugin
+        run: |
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Prepare release
+        run: |
+          mvn -B \
+            -DpreparationGoals=clean \
+            release:prepare \
+            -DreleaseVersion=${{ env.RELEASE_VERSION }} \
+            -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} \
+            -Dtag=${{ env.TAG }} \
+            -Psonatype-oss-release \
+            -DinteractiveMode=false
+
+      - name: Perform release
+        run: |
+          mvn -B \
+            -DinteractiveMode=false \
+            -DreleaseProfiles=sonatype-oss-release \
+            -Dgoals='deploy' \
+            -Darguments='-Psonatype-oss-release -DskipTests -DskipITs' \
+            release:perform
+
+      - name: Print Release Version
+        run: echo "Released version ${{ env.RELEASE_VERSION }} with tag ${{ env.TAG }}"
