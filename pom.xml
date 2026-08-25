@@ -159,6 +159,11 @@
   </licenses>
 
   <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <name>Central Portal Releases</name>
+      <url>https://central.sonatype.com/repository/maven-releases/</url>
+    </repository>
     <snapshotRepository>
       <id>ossrh</id>
       <name>Central Portal Snapshots</name>
