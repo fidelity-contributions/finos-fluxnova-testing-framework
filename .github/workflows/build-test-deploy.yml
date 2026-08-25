@@ -61,7 +61,6 @@ jobs:
           branch: ${{ github.ref_name }}
 
       - name: Tests
-        description: "Runs all the tests"
         env:
           MAVEN_OPTS: "-Xmx8g"
         shell: bash
