@@ -119,7 +119,7 @@ jobs:
       - name: Prepare release
         run: |
           mvn -B \
-            -DpreparationGoals=clean \
+            -DpreparationGoals="clean install"\
             release:prepare \
             -DreleaseVersion=${{ env.RELEASE_VERSION }} \
             -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} \
