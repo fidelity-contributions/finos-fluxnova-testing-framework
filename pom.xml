@@ -67,6 +67,7 @@
     <version.fluxnova>2.0.1</version.fluxnova>
     <version.jakarta.el>4.0.2</version.jakarta.el>
     <version.sonar.plugin>5.5.0.6356</version.sonar.plugin>
+    <publish.server.id>0.11.0</publish.server.id>
   </properties>
 
   <build>
