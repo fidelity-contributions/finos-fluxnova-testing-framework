@@ -140,6 +140,21 @@
     </dependencies>
   </dependencyManagement>
 
+  <profiles>
+    <profile>
+    <id>sonatype-oss-release</id>
+      <modules>
+        <module>bpm-testing</module>
+        <module>bpm-testing-archetype</module>
+        <module>bpm-coverage-collection-plugin</module>
+        <module>bpm-testing-regression</module>
+        <module>bpm-testing-bom</module>
+        <module>bpm-testing-mockito</module>
+        <module>bpm-testing-process-coverage</module>
+      </modules>
+    </profile>
+  </profiles>
+
   <repositories>
     <repository>
       <id>central</id>
