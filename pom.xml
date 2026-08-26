@@ -71,6 +71,23 @@
   </properties>
 
   <build>
+    <pluginManagement>
+      <plugins>
+      <plugin>
+      <groupId>org.sonatype.central</groupId>
+      <artifactId>central-publishing-maven-plugin</artifactId>
+      <version>${version.publishing.plugin}</version>
+      <extensions>true</extensions>
+      <configuration>
+        <deploymentName>fluxnova-bpm-testing-framework-${project.version}</deploymentName>
+        <publishingServerId>${publish.server.id}</publishingServerId>
+        <!-- TODO: its set to false to manually validate the artifacts before publishing, set it to true once successfully tested with all dependent projects-->
+        <autoPublish>false</autoPublish>
+        <waitUntil>validated</waitUntil>
+      </configuration>
+    </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -102,12 +119,7 @@
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
         <version>${version.publishing.plugin}</version>
-        <configuration>
-          <deploymentName>fluxnova-bpm-testing-framework-${project.version}</deploymentName>
-          <publishingServerId>${publish.server.id}</publishingServerId>
-          <!-- TODO: its set to false to manually validate the artifacts before publishing, set it to true once successfully tested with all dependent projects-->
-          <autoPublish>false</autoPublish>
-        </configuration>
+
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
