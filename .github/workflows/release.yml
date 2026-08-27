@@ -142,7 +142,7 @@ jobs:
             -DinteractiveMode=false \
             -DreleaseProfiles=sonatype-oss-release \
             -Dgoals='deploy' \
-            -Darguments='-Psonatype-oss-release -Dcentral-publishing-maven-plugin.version=0.11.0 -DreleasePerform=true -DskipTests -DskipITs' \
+            -Darguments='-Psonatype-oss-release -Dcentral-publishing-maven-plugin.version=0.9.0 -DreleasePerform=true -DskipTests -DskipITs' \
             release:perform
 
       - name: Print Release Version

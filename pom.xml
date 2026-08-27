@@ -6,6 +6,7 @@
     <groupId>org.finos.fluxnova.bpm</groupId>
     <artifactId>fluxnova-parent</artifactId>
     <version>2.0.1</version>
+    <relativePath/>
   </parent>
   <groupId>org.finos.fluxnova.bpm.test</groupId>
   <artifactId>bpm-testing-parent</artifactId>
@@ -67,7 +68,8 @@
     <version.fluxnova>2.0.1</version.fluxnova>
     <version.jakarta.el>4.0.2</version.jakarta.el>
     <version.sonar.plugin>5.5.0.6356</version.sonar.plugin>
-    <version.publishing.plugin>0.11.0</version.publishing.plugin>
+    <version.publishing.plugin>0.9.0</version.publishing.plugin>
+    <release.goals>install org.sonatype.central:central-publishing-maven-plugin:0.9.0:publish</release.goals>
   </properties>
 
   <build>
@@ -80,15 +82,12 @@
       <extensions>true</extensions>
       <configuration>
         <deploymentName>fluxnova-bpm-testing-framework-${project.version}</deploymentName>
-        <publishingServerId>${publish.server.id}</publishingServerId>
+        <publishingServerId>ossrh</publishingServerId>
         <!-- TODO: its set to false to manually validate the artifacts before publishing, set it to true once successfully tested with all dependent projects-->
         <autoPublish>false</autoPublish>
         <waitUntil>validated</waitUntil>
       </configuration>
     </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
@@ -109,6 +108,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <releaseProfiles>release</releaseProfiles>
+          <goals>${release.goals}</goals>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.sonarsource.scanner.maven</groupId>
@@ -116,14 +120,11 @@
         <version>${version.sonar.plugin}</version>
       </plugin>
       <plugin>
-        <groupId>org.sonatype.central</groupId>
-        <artifactId>central-publishing-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
       </plugin>
     </plugins>
+  </pluginManagement>
   </build>
 
   <dependencyManagement>
