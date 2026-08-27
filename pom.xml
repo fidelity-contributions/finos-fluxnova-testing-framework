@@ -141,7 +141,7 @@
 
   <profiles>
     <profile>
-    <id>sonatype-oss-release</id>
+    <id>oss-testing-framework-release</id>
       <modules>
         <module>bpm-testing</module>
         <module>bpm-testing-archetype</module>

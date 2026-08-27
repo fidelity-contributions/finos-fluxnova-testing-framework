@@ -133,16 +133,16 @@ jobs:
             -DreleaseVersion=${{ env.RELEASE_VERSION }} \
             -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} \
             -Dtag=${{ env.TAG }} \
-            -Psonatype-oss-release \
+            -Poss-testing-framework-release \
             -DinteractiveMode=false
 
       - name: Perform release
         run: |
           mvn -B \
             -DinteractiveMode=false \
-            -DreleaseProfiles=sonatype-oss-release \
+            -DreleaseProfiles=oss-testing-framework-release \
             -Dgoals='deploy' \
-            -Darguments='-Psonatype-oss-release -DskipTests -DskipITs' \
+            -Darguments='-Poss-testing-framework-release -DskipTests -DskipITs' \
             release:perform
 
       - name: Print Release Version
