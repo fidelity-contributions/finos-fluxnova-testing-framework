@@ -67,7 +67,7 @@
     <version.fluxnova>2.0.1</version.fluxnova>
     <version.jakarta.el>4.0.2</version.jakarta.el>
     <version.sonar.plugin>5.5.0.6356</version.sonar.plugin>
-    <version.publishing.plugin>0.9.0</version.publishing.plugin>
+    <version.publishing.plugin>0.11.0</version.publishing.plugin>
   </properties>
 
   <build>
@@ -118,8 +118,6 @@
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>${version.publishing.plugin}</version>
-
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
