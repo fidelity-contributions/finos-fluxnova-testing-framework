@@ -73,7 +73,6 @@
   </properties>
 
   <build>
-    <pluginManagement>
       <plugins>
       <plugin>
       <groupId>org.sonatype.central</groupId>
@@ -124,7 +123,6 @@
         <artifactId>maven-gpg-plugin</artifactId>
       </plugin>
     </plugins>
-  </pluginManagement>
   </build>
 
   <dependencyManagement>
