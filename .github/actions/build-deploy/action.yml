@@ -13,7 +13,8 @@ runs:
         MAVEN_OPTS: "-Xmx8g"
       shell: bash
       run: |
-        if [[ "${{ inputs.branch }}" == "main" ]]; then
+        INPUT_BRANCH_NAME="${{ inputs.branch }}"
+        if [[ "$INPUT_BRANCH_NAME" == release/* ]]; then
           mvn -B -e -U deploy -DskipTests=true -DskipITs=true -s ./settings.xml
         else
           mvn -B -e -U clean install -DskipTests=true -DskipITs=true

@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>bpm-testing</artifactId>
+    <name>bpm-testing</name>
     <packaging>jar</packaging>
 
     <dependencyManagement>
