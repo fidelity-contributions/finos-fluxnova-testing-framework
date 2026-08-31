@@ -4,20 +4,20 @@
 
     <parent>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <artifactId>bpm-testing-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <artifactId>fluxnova-bpm-testing-parent</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>bpm-testing</artifactId>
-    <name>bpm-testing</name>
+    <artifactId>fluxnova-bpm-testing</artifactId>
+    <name>fluxnova-bpm-testing</name>
     <packaging>jar</packaging>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.finos.fluxnova.bpm.test</groupId>
-                <artifactId>bpm-testing-bom</artifactId>
+                <artifactId>fluxnova-bpm-testing-bom</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -28,7 +28,7 @@
     <dependencies>
         <dependency>
             <groupId>org.finos.fluxnova.bpm.test</groupId>
-            <artifactId>bpm-testing-mockito</artifactId>
+            <artifactId>fluxnova-bpm-testing-mockito</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

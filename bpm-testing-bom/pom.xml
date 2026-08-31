@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <artifactId>bpm-testing-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <artifactId>fluxnova-bpm-testing-parent</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>bpm-testing-bom</artifactId>
-    <name>bpm-testing-bom</name>
+    <artifactId>fluxnova-bpm-testing-bom</artifactId>
+    <name>fluxnova-bpm-testing-bom</name>
     <packaging>pom</packaging>
 
     <dependencyManagement>

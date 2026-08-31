@@ -46,8 +46,8 @@ The `bpm-testing-bom` POM specifies the versions of all the direct and transitiv
     <dependencies>
         <dependency>
             <groupId>org.finos.fluxnova.bpm.test</groupId>
-            <artifactId>bpm-testing-bom</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <artifactId>fluxnova-bpm-testing-bom</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -63,8 +63,8 @@ The `bpm-testing` JAR contains helper classes and imports all the dependencies r
 <dependencies>
     <dependency>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <artifactId>bpm-testing</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <artifactId>fluxnova-bpm-testing</artifactId>
+        <version>1.0.1-SNAPSHOT</version>
     </dependency>
 </dependencies>
 ```
