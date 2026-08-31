@@ -1,6 +1,6 @@
 {
-    "name": "bpm-testing-process-coverage",
-    "version": "1.0.0",
+    "name": "fluxnova-bpm-testing-process-coverage",
+    "version": "1.0.1",
     "type": "module",
     "description": "Contains the viewer for the flowcov.io frontend",
     "author": "FINOS <http://fluxnova.finos.org>",
