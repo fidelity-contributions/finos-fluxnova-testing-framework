@@ -9,11 +9,11 @@
     <relativePath/>
   </parent>
   <groupId>org.finos.fluxnova.bpm.test</groupId>
-  <artifactId>bpm-testing-parent</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <artifactId>fluxnova-bpm-testing-parent</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>BPM Testing Parent</name>
-  <description>BPM Testing Parent</description>
+  <name>Fluxnova BPM Testing Parent</name>
+  <description>Fluxnova BPM Testing Parent</description>
   <url>https://github.com/finos/fluxnova-testing-framework</url>
 
   <scm>

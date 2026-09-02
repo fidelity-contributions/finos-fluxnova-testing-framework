@@ -7,7 +7,7 @@
   <version>${version}</version>
 
   <properties>
-    <bpm-testing.version>1.0.0-SNAPSHOT</bpm-testing.version>
+    <bpm-testing.version>1.0.1-SNAPSHOT</bpm-testing.version>
     <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
@@ -25,7 +25,7 @@
     <dependencies>
       <dependency>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <artifactId>bpm-testing-bom</artifactId>
+        <artifactId>fluxnova-bpm-testing-bom</artifactId>
         <version>${bpm-testing.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -36,12 +36,12 @@
   <dependencies>
     <dependency>
       <groupId>org.finos.fluxnova.bpm.test</groupId>
-      <artifactId>bpm-testing</artifactId>
+      <artifactId>fluxnova-bpm-testing</artifactId>
       <version>${bpm-testing.version}</version>
     </dependency>
     <dependency>
       <groupId>org.finos.fluxnova.bpm.test</groupId>
-      <artifactId>bpm-testing-mockito</artifactId>
+      <artifactId>fluxnova-bpm-testing-mockito</artifactId>
       <version>${bpm-testing.version}</version>
     </dependency>
     <dependency>
@@ -60,7 +60,7 @@
     </dependency>
     <dependency>
       <groupId>org.finos.fluxnova.bpm.test</groupId>
-      <artifactId>bpm-testing-process-coverage</artifactId>
+      <artifactId>fluxnova-bpm-testing-process-coverage</artifactId>
       <version>${bpm-testing.version}</version>
       <scope>test</scope>
     </dependency>
@@ -160,7 +160,7 @@
       </plugin>
       <plugin>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <artifactId>bpm-coverage-collection-plugin</artifactId>
+        <artifactId>fluxnova-bpm-coverage-collection-plugin</artifactId>
         <version>${bpm-testing.version}</version>
         <executions>
           <execution>

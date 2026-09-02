@@ -3,16 +3,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>bpm-testing-parent</artifactId>
+        <artifactId>fluxnova-bpm-testing-parent</artifactId>
         <groupId>org.finos.fluxnova.bpm.test</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>bpm-coverage-collection-plugin</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>fluxnova-bpm-coverage-collection-plugin</artifactId>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>bpm-coverage-collection-plugin</name>
+    <name>fluxnova-bpm-coverage-collection-plugin</name>
 
     <prerequisites>
         <maven>${maven.version}</maven>
@@ -30,7 +30,7 @@
         <dependencies>
             <dependency>
                 <groupId>org.finos.fluxnova.bpm.test</groupId>
-                <artifactId>bpm-testing-bom</artifactId>
+                <artifactId>fluxnova-bpm-testing-bom</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -64,7 +64,7 @@
         </dependency>
         <dependency>
             <groupId>org.finos.fluxnova.bpm.test</groupId>
-            <artifactId>bpm-testing</artifactId>
+            <artifactId>fluxnova-bpm-testing</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
